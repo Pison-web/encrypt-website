@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ecrypt-Anonymous Messages</title>
+  <meta name="description" content="Ecrypt lets people send you anonymous messages with a single shareable link." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M3 7.5C3 6.12 4.12 5 5.5 5h13A2.5 2.5 0 0 1 21 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5v-9Z" stroke="white" stroke-opacity=".9" stroke-width="1.4"/>
+            <path d="M4 7l7.2 5.2a2 2 0 0 0 2.4 0L21 7" stroke="white" stroke-opacity=".9" stroke-width="1.4"/>
+          </svg>
+        </div>
+        <h1>ENCRYPT</h1>
+        <span class="badge" title="All in one file. No server required for demo.">TRUSTED</span>
+      </div>
+      <nav class="nav">
+        <button class="btn ghost" id="toggleTheme" aria-label="Toggle dark mode">Toggle Theme</button>
+        <a class="btn secondary" href="#">Home</a>
+      </nav>
+    </header>
+
+    <!-- HOME VIEW -->
+    <section data-view id="view-home" class="active">
+      <div class="hero">
+        <div class="card">
+          <div class="pill">🔒 Anonymous • link-based</div>
+          <h2 class="title">Get honest messages —
+            <span style="background:linear-gradient(135deg,var(--accent),var(--accent-2)); -webkit-background-clip:text; background-clip:text; color:transparent">without revealing who sent them</span>
+          </h2>
+          <p class="subtitle">Create your unique Ecrypt link. Share it anywhere. Anyone can send you anonymous messages; only you can view the inbox.</p>
+
+          <div class="card" style="padding:16px; margin:18px 0">
+            <div class="row">
+              <input class="input" id="displayName" placeholder="Display name (optional, e.g., Pison)"/>
+              <button class="btn" id="createLink">Create my Link</button>
+            </div>
+            <p class="muted" style="margin-top:10px">We generate two links: your private inbox link and your public send link.</p>
+          </div>
+
+          <div class="how">
+            <div class="card">
+              <strong>1) Create</strong>
+              <p class="muted">Make a unique link</p>
+            </div>
+            <div class="card">
+              <strong>2) Share</strong>
+              <p class="muted">Post the public link on WhatsApp, X, Instagram bio, anywhere.</p>
+            </div>
+            <div class="card">
+              <strong>3) Read</strong>
+              <p class="muted">Open your inbox link to read, pin, or delete messages.</p>
+            </div>
+          </div>
+
+          <div style="margin-top:18px" class="grid3">
+            <div class="kpi card">
+              <div class="num" id="kpiMessages">0</div>
+              <div class="muted">messages</div>
+            </div>
+            <div class="kpi card">
+              <div class="num">2</div>
+              <div class="muted">links: inbox & send</div>
+            </div>
+            <div class="kpi card">
+              <div class="num">∞</div>
+              <div class="muted">anonymous senders</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin:0 0 10px">Live Preview</h3>
+          <p class="muted" style="margin-top:0">This pane updates when you create a link.</p>
+          <div id="livePreview" class="empty">No link yet — create your Ecrypt to see your links here.</div>
+        </div>
+      </div>
+      
+      <h4>
+        <li><a href="about.html">WHAT IS ENCRYPT ABOUT ?</a></li>
+      </h4>
+
+      <footer>
+        This Website was built by <a href="https://www.instagram.com/big_p_lawwd/", style="color: rgb(64, 248, 232);">PISON SAABOANE</a>
+        <P>A student of Ghana Communication Technology University <strong>GCTU</strong></P>
+      </footer>
+    </section>
+
+    <!-- INBOX VIEW (owner) -->
+    <section data-view id="view-inbox">
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 style="margin:0">📥 Your Inbox <span id="inboxOwner" class="muted"></span></h2>
+          <button class="btn small" id="btnSharePublic">Copy public link</button>
+        </div>
+        <p class="muted">Only you (with this link) can see the messages. Keep it safe.</p>
+
+        <div class="copybox" style="margin:12px 0 18px">
+          <input class="input" id="publicLink" readonly>
+          <button class="btn small" id="copyPublic">Copy</button>
+        </div>
+
+        <div id="messagesList" class="grid3"></div>
+        <div id="emptyInbox" class="empty" style="display:none">No messages yet. Share your public link to start receiving.</div>
+      </div>
+    </section>
+
+    <!-- SEND VIEW (public) -->
+    <section data-view id="view-send">
+      <div class="card">
+        <h2 style="margin:0 0 6px">✉️ Send an anonymous message</h2>
+        <p class="muted">to <strong id="sendToName">this Ecrypt user</strong>. Your name will not be shown.</p>
+        <label for="msg">Your message</label>
+        <textarea id="msg" maxlength="1000" placeholder="Type something honest, kind, or constructive…"></textarea>
+
+        <div class="row" style="margin-top:10px">
+          <input class="input" id="alias" placeholder="Nickname (optional)" style="max-width:260px">
+          <button class="btn" id="sendBtn">Send anonymously</button>
+        </div>
+        <p class="muted" style="margin-top:8px">Be respectful. Messages violating laws or platform rules are not allowed.</p>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <h3 style="margin:0 0 6px">Share this page</h3>
+        <div class="copybox">
+          <input class="input" id="sendLink" readonly>
+          <button class="btn small" id="copySend">Copy</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <script>
+(function(){
+  // --- Utilities ---
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+  const toast = (msg) => {
+    const t = $('#toast');
+    if(!t) return alert(msg);
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=> t.classList.remove('show'), 2200);
+  };
+  const uid = () => crypto.getRandomValues(new Uint8Array(12)).reduce((a,b)=>a+('0'+b.toString(16)).slice(-2),'');
+  const nowISO = () => new Date().toISOString();
+  const esc = (str='') => String(str).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+
+  // --- Local DB (profiles stored as ecrypt_{id}) ---
+  const DB = {
+    key: (id)=>`ecrypt_${id}`,
+    createProfile(id, name){ localStorage.setItem(this.key(id), JSON.stringify({ id, name: name||'', createdAt: nowISO(), messages: [] })); },
+    getProfile(id){ const raw = localStorage.getItem(this.key(id)); return raw ? JSON.parse(raw) : null; },
+    addMessage(id, msg){ const p = this.getProfile(id); if(!p) return false; p.messages.unshift(msg); localStorage.setItem(this.key(id), JSON.stringify(p)); return true; },
+    delMessage(id, idx){ const p = this.getProfile(id); if(!p) return false; p.messages.splice(idx,1); localStorage.setItem(this.key(id), JSON.stringify(p)); return true; },
+    countAll(){ return Object.keys(localStorage).filter(k=>k.startsWith('ecrypt_')).reduce((n,k)=>{ try{ const p = JSON.parse(localStorage.getItem(k)); return n + (p.messages?.length || 0); }catch(e){ return n; } }, 0); }
+  };
+
+  // --- Theme toggle (keeps your existing .light-theme approach) ---
+  const toggleBtn = $('#toggleTheme');
+  if(toggleBtn){
+    toggleBtn.addEventListener('click', ()=>{
+      document.body.classList.toggle('light-theme');
+      const isLight = document.body.classList.contains('light-theme');
+      toast(isLight ? 'Light theme' : 'Dark theme');
+    });
+  }
+
+  // --- Router (switch views based on hash) ---
+  function route(){
+    const hash = location.hash.slice(1);
+    const [_, view, id] = hash.split('/');
+    $$('[data-view]').forEach(v=>v.classList.remove('active'));
+
+    if(view === 'send' && id){
+      $('#view-send').classList.add('active');
+      const profile = DB.getProfile(id);
+      $('#sendToName').textContent = profile?.name || 'Ecrypt user';
+      $('#sendLink').value = location.href;
+      return;
+    }
+
+    if(view === 'inbox' && id){
+      $('#view-inbox').classList.add('active');
+      renderInbox(id);
+      return;
+    }
+
+    // default -> home
+    $('#view-home').classList.add('active');
+    const kpi = $('#kpiMessages'); if(kpi) kpi.textContent = DB.countAll();
+  }
+  window.addEventListener('hashchange', route);
+
+  // --- Create links (home) ---
+  const createBtn = $('#createLink');
+  if(createBtn){
+    createBtn.addEventListener('click', ()=>{
+      const name = $('#displayName')?.value.trim();
+      const id = uid();
+      DB.createProfile(id, name);
+
+      const inbox = `${location.origin}${location.pathname}#/inbox/${id}`;
+      const send = `${location.origin}${location.pathname}#/send/${id}`;
+
+      const live = $('#livePreview');
+      if(live){
+        live.innerHTML = `
+          <div class="card" style="margin:0; background:#0b122c; border:1px solid #273264">
+            <p style="margin:0 0 8px"><strong>Your links</strong></p>
+            <div class="copybox" style="margin:6px 0 8px">
+              <input class="input" value="${inbox}" readonly>
+              <button class="btn small copyInbox">Copy inbox</button>
+            </div>
+            <div class="copybox">
+              <input class="input" value="${send}" readonly>
+              <button class="btn small copyPublic">Copy public</button>
+            </div>
+            <div class="row" style="margin-top:12px">
+              <a class="btn secondary" href="${inbox}">Open Inbox</a>
+              <a class="btn" href="${send}">Open Public Page</a>
+            </div>
+          </div>`;
+        // attach listeners to new buttons
+        live.querySelector('.copyInbox')?.addEventListener('click', ()=>navigator.clipboard.writeText(inbox).then(()=>toast('Inbox link copied')));
+        live.querySelector('.copyPublic')?.addEventListener('click', ()=>navigator.clipboard.writeText(send).then(()=>toast('Public link copied')));
+      }
+
+      toast('Your Ecrypt links are ready');
+      const kpi = $('#kpiMessages'); if(kpi) kpi.textContent = DB.countAll();
+    });
+  }
+
+  // --- Send page logic (public) ---
+  const sendBtn = $('#sendBtn');
+  if(sendBtn){
+    sendBtn.addEventListener('click', ()=>{
+      const parts = location.hash.split('/');
+      const id = parts[2];
+      const text = $('#msg')?.value.trim();
+      const alias = $('#alias')?.value.trim().slice(0,30);
+      if(!id) return toast('Invalid link');
+      if(!text) return toast('Write a message first');
+      const ok = DB.addMessage(id, { text, alias, at: nowISO() });
+      if(!ok) return toast('Inbox not found');
+      $('#msg').value = ''; $('#alias').value = '';
+      toast('Message sent anonymously ✅');
+    });
+  }
+
+  // --- Inbox rendering (owner) ---
+  function renderInbox(id){
+    const p = DB.getProfile(id) || { messages: [], name: '' };
+    $('#inboxOwner').textContent = p.name ? `— ${p.name}` : '';
+    $('#publicLink').value = `${location.origin}${location.pathname}#/send/${id}`;
+
+    const list = $('#messagesList');
+    list.innerHTML = '';
+    const items = p.messages || [];
+    if(items.length === 0){ $('#emptyInbox').style.display='block'; return } else { $('#emptyInbox').style.display='none'; }
+
+    items.forEach((m,i)=>{
+      const el = document.createElement('div');
+      el.className='message';
+      const when = new Date(m.at || Date.now()).toLocaleString();
+      const who = m.alias ? esc(m.alias) : 'Anonymous';
+      el.innerHTML = `
+        <div class="meta">
+          <div>From: <strong>${who}</strong></div>
+          <div>${when}</div>
+        </div>
+        <div class="text">${esc(m.text)}</div>
+        <div class="row" style="margin-top:10px; justify-content:flex-end">
+          <button class="btn small ghost danger" aria-label="Delete" data-del="${i}">Delete</button>
+        </div>`;
+      list.appendChild(el);
+    });
+
+    // attach delete handlers
+    $$('#messagesList [data-del]').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        const idx = Number(e.currentTarget.getAttribute('data-del'));
+        DB.delMessage(id, idx);
+        toast('Message deleted');
+        renderInbox(id);
+      });
+    });
+  }
+
+  // --- Copy buttons (inbox / share) ---
+  $('#copyPublic')?.addEventListener('click', ()=>navigator.clipboard.writeText($('#publicLink').value).then(()=>toast('Public link copied')));
+  $('#btnSharePublic')?.addEventListener('click', ()=>navigator.clipboard.writeText($('#publicLink').value).then(()=>toast('Public link copied')));
+  $('#copySend')?.addEventListener('click', ()=>navigator.clipboard.writeText($('#sendLink').value).then(()=>toast('Send page link copied')));
+
+  // --- Boot ---
+  route();
+})();
+</script>
+
+</body>
+</html>

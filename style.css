@@ -1,0 +1,136 @@
+:root{
+      --bg: #0f0f0f;
+      --panel: #8591d4;
+      --accent: #075fe3; /* soft blue */
+      --accent-2: #ff03ee; /* mint */
+      --text: #ffffff;
+      --muted: #b8c1d1;
+      --danger: #ff6b6b;
+      --ok: #36d399;
+      --ring: rgba(110,168,254,.45);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius-xl: 22px;
+      --radius: 14px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 20% -10%, #0035f5 0%, var(--bg) 52%),
+                  radial-gradient(900px 700px at 110% 10%, #202129 0%, var(--bg) 60%),
+                  var(--bg);
+      color:var(--text);
+      line-height:1.45;
+    }
+    
+    a{color:var(--accent); text-decoration:none}
+    .wrap{max-width:1100px; margin:0 auto; padding:28px}
+    .container{max-width:1000px; margin:0 auto; padding:10px;background: rgba(4, 14, 41, 0.774);}
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px;
+    }
+    .brand{display:flex; align-items:center; gap:12px}
+    .logo{width:44px; height:44px; display:grid; place-items:center; border-radius:14px; background:linear-gradient(135deg,var(--accent),var(--accent-2)); box-shadow:var(--shadow)}
+    .logo svg{filter:drop-shadow(0 4px 12px rgba(0,0,0,.25))}
+    .brand h1{font-size:22px; margin:0; letter-spacing:.2px}
+    .nav{display:flex; gap:12px; align-items:center}
+    .btn{appearance:none; border:0; border-radius:12px; padding:12px 16px; font-weight:600; cursor:pointer; color:#ffffff; background:#fe56f3; box-shadow:var(--shadow)}
+    .btn.secondary{background:#1a234b; color:var(--text); border:1px solid #2a3568}
+    .btn.ghost{background:transparent; color:var(--text); border:1px solid #2a3568}
+    .btn.small{padding:8px 12px; border-radius:10px; font-weight:600}
+    .btn:focus{outline:3px solid var(--ring); outline-offset:2px}
+
+    .hero{margin-top:12px; display:grid; grid-template-columns: 1.2fr 1fr; gap:28px}
+    @media (max-width: 900px){.hero{grid-template-columns:1fr}}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00)); border:1px solid rgba(255,255,255,.08); border-radius:var(--radius-xl); padding:22px; box-shadow:var(--shadow)}
+    .title{font-size:40px; line-height:1.1; margin:6px 0 10px; letter-spacing:-.5px}
+    .subtitle{color:var(--muted); margin:0 0 18px}
+
+    .pill{display:inline-flex; align-items:center; gap:8px; background: #0e1533; color:#cbd6ff; border:1px solid #233075; padding:8px 12px; border-radius:999px; font-size:13px; font-weight:600}
+
+    .input, textarea{
+      width:100%; padding:14px 14px; border-radius:12px; border:1px solid #2a3568; background:#0b122c; color:var(--text);
+    }
+    textarea{min-height:120px; resize:vertical}
+    label{display:block; font-weight:600; margin:12px 0 8px}
+    .row{display:flex; gap:12px; align-items:center}
+
+    .grid3{display:grid; grid-template-columns: repeat(3, 1fr); gap:16px}
+    @media (max-width: 900px){.grid3{grid-template-columns:1fr}}
+
+    .how{display:grid; grid-template-columns: repeat(3,1fr); gap:16px; margin-top:16px}
+    @media (max-width: 900px){.how{grid-template-columns:1fr}}
+
+    .muted{color:var(--muted)}
+    footer{margin:40px 0 20px; color:var(--muted); font-size:14px}
+
+    .kpi{display:flex; align-items:center; gap:10px}
+    .kpi .num{font-weight:800; font-size:26px}
+
+    /* Views */
+    [data-view]{display:none}
+    [data-view].active{display:block}
+
+    .message{background:#0b122c; border:1px solid #273264; padding:14px; border-radius:14px}
+    .message .meta{display:flex; justify-content:space-between; gap:10px; color:#a8b3d9; font-size:13px}
+    .message .text{white-space:pre-wrap; margin-top:8px}
+
+    .empty{
+      border:1px dashed #2a3568; border-radius:14px; padding:20px; text-align:center; color:var(--muted)
+    }
+
+    .toast{position:fixed; right:18px; bottom:18px; background:#fe56f3; border:1px solid #2a3568; color:var(--text); padding:12px 14px; border-radius:12px; box-shadow:var(--shadow); opacity:0; transform:translateY(8px); transition:all .3s ease}
+    .toast.show{opacity:1; transform:none}
+
+    .badge{display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; border:1px solid #28408a; background:#0b163a; color:#cbd6ff; font-size:12px}
+
+    .copybox{display:flex; gap:8px}
+    .copybox .input{flex:1}
+
+    .danger{color:var(--danger)}
+
+    .center{display:grid; place-items:center}
+  
+    nav {position: relative;}
+    nav ul {list-style-type:none;}
+    nav a {text-decoration:none; padding-bottom:07;}
+    nav li {display:inline;}
+    main .container{margin-top: 20px;}
+    
+    /* Light Theme */
+   body.light-theme {
+  --bg: #ffffff;
+  --panel: #f3f3f3;
+  --accent: #075fe3;
+  --accent-2: #ff03ee;
+  --text: #0b1020;
+  --muted: #555555;
+  --danger: #d9534f;
+  --ok: #28a745;
+  --ring: rgba(0,120,255,.45);
+  background: var(--bg);
+  color: var(--text);
+}
+
+body.light-theme .card {
+  background: #ffffff;
+  border: 1px solid #ddd;
+}
+
+body.light-theme .btn.secondary {
+  background: #f0f0f0;
+  color: #111;
+  border: 1px solid #ccc;
+}
+
+body.light-theme .btn.ghost {
+  border: 1px solid #aaa;
+  color: #111;
+}
+
+body.light-theme .input, 
+body.light-theme textarea {
+  background: #fff;
+  border: 1px solid #ccc;
+  color: #000000;
+}
