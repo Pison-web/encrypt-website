@@ -73,22 +73,22 @@
           </div>
 
           <div style="margin-top:18px" class="grid3">
-            <div class="kpi card">
-              <div class="num" id="kpiMessages">0</div>
-              <div class="muted">messages</div>
-            </div>
-            <div class="kpi card">
-              <div class="num">2</div>
-              <div class="muted">links: inbox & send</div>
-            </div>
-            <div class="kpi card">
-              <div class="num">∞</div>
-              <div class="muted">anonymous senders</div>
-            </div>
-          </div>
-        </div>
+  <div class="kpi card clickable" id="openInbox">
+    <div class="num" id="kpiMessages">0</div>
+    <div class="muted">messages</div>
+  </div>
+  <div class="kpi card clickable" id="openLinks">
+    <div class="num">2</div>
+    <div class="muted">links: inbox & send</div>
+  </div>
+  <div class="kpi card clickable" id="openSenders">
+    <div class="num">∞</div>
+    <div class="muted">anonymous senders</div>
+  </div>
+</div>
+</div>
 
-        <div class="card">
+        <div class="card" id="live-preview">
           <h3 style="margin:0 0 10px">Live Preview</h3>
           <p class="muted" style="margin-top:0">This pane updates when you create a link.</p>
           <div id="livePreview" class="empty">No link yet — create your Ecrypt to see your links here.</div>
@@ -308,10 +308,30 @@
     });
   }
 
-  // --- Copy buttons (inbox / share) ---
+   // --- Copy buttons (inbox / share) ---
   $('#copyPublic')?.addEventListener('click', ()=>navigator.clipboard.writeText($('#publicLink').value).then(()=>toast('Public link copied')));
   $('#btnSharePublic')?.addEventListener('click', ()=>navigator.clipboard.writeText($('#publicLink').value).then(()=>toast('Public link copied')));
   $('#copySend')?.addEventListener('click', ()=>navigator.clipboard.writeText($('#sendLink').value).then(()=>toast('Send page link copied')));
+
+  // --- Make KPI cards clickable ---
+  $('#openInbox')?.addEventListener('click', ()=>{
+    const keys = Object.keys(localStorage).filter(k=>k.startsWith('ecrypt_'));
+    if(keys.length){
+      const id = keys[0].replace('ecrypt_',''); // open first profile inbox
+      location.hash = `#/inbox/${id}`;
+    } else {
+      toast('No inbox found. Create your link first!');
+    }
+  });
+
+  $('#openLinks')?.addEventListener('click', ()=>{
+    // scrolls smoothly to Live Preview section
+    document.getElementById('live-preview')?.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  $('#openSenders')?.addEventListener('click', ()=>{
+    toast('Unlimited anonymous senders can message you.');
+  });
 
   // --- Boot ---
   route();
