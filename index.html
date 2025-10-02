@@ -6,15 +6,16 @@
   <title>Ecrypt-Anonymous Messages</title>
   <meta name="description" content="Ecrypt lets people send you anonymous messages with a single shareable link." />
   <meta property="og:title" content="Encrypt — Anonymous Messages">
-<meta property="og:description" content="Create and share your unique Encrypt link. Receive honest, anonymous messages safely and privately.">
-<meta property="og:image" content="https://pison-web.github.io/encrypt-website/images/encrypt.png">
-<meta property="og:url" content="https://pison-web.github.io/encrypt-website/">
-<meta property="og:type" content="website">
+  <meta property="og:description" content="Create and share your unique Encrypt link. Receive honest, anonymous messages safely and privately.">
+  <meta property="og:image" content="https://pison-web.github.io/encrypt-website/images/encrypt.png">
+  <meta property="og:url" content="https://pison-web.github.io/encrypt-website/">
+  <meta property="og:type" content="website">
 
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Encrypt — Anonymous Messages">
-<meta name="twitter:description" content="Create and share your unique Encrypt link. Receive honest, anonymous messages safely and privately.">
-<meta name="twitter:image" content="https://pison-web.github.io/encrypt-website/images/encrypt.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Encrypt — Anonymous Messages">
+  <meta name="twitter:description" content="Create and share your unique Encrypt link. Receive honest, anonymous messages safely and privately.">
+  <meta name="twitter:image" content="https://pison-web.github.io/encrypt-website/images/encrypt.png">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -73,20 +74,20 @@
           </div>
 
           <div style="margin-top:18px" class="grid3">
-  <div class="kpi card clickable" id="openInbox">
-    <div class="num" id="kpiMessages">0</div>
-    <div class="muted">messages</div>
-  </div>
-  <div class="kpi card clickable" id="openLinks">
-    <div class="num">2</div>
-    <div class="muted">links: inbox & send</div>
-  </div>
-  <div class="kpi card clickable" id="openSenders">
-    <div class="num">∞</div>
-    <div class="muted">anonymous senders</div>
-  </div>
-</div>
-</div>
+            <div class="kpi card clickable" id="openInbox">
+              <div class="num" id="kpiMessages">0</div>
+              <div class="muted">messages</div>
+            </div>
+            <div class="kpi card clickable" id="openLinks">
+              <div class="num">2</div>
+              <div class="muted">links: inbox & send</div>
+            </div>
+            <div class="kpi card clickable" id="openSenders">
+              <div class="num">∞</div>
+              <div class="muted">anonymous senders</div>
+            </div>
+          </div>
+        </div>
 
         <div class="card" id="live-preview">
           <h3 style="margin:0 0 10px">Live Preview</h3>
@@ -94,14 +95,14 @@
           <div id="livePreview" class="empty">No link yet — create your Ecrypt to see your links here.</div>
         </div>
       </div>
-      
+
       <h4>
         <li><a href="about.html">WHAT IS ENCRYPT ABOUT ?</a></li>
       </h4>
 
       <footer>
-        This Website was built by <a href="https://www.instagram.com/big_p_lawwd/", style="color: rgb(64, 248, 232);">PISON SAABOANE</a>
-        <P>A student of Ghana Communication Technology University <strong>GCTU</strong></P>
+        This Website was built by <a href="https://www.instagram.com/big_p_lawwd/" style="color: rgb(64, 248, 232);">PISON SAABOANE</a>
+        <p>A student of Ghana Communication Technology University <strong>GCTU</strong></p>
       </footer>
     </section>
 
@@ -112,7 +113,7 @@
           <h2 style="margin:0">📥 Your Inbox <span id="inboxOwner" class="muted"></span></h2>
           <button class="btn small" id="btnSharePublic">Copy public link</button>
         </div>
-        <p class="muted">Only you can view these messages with your private link[ the link below ] — <strong>KEEP IT SAFE !!</strong> . To receive anonymous messages, share only your public link.</p>
+        <p class="muted">Only you can view these messages with your private link — <strong>KEEP IT SAFE !!</strong> . To receive anonymous messages, share only your public link.</p>
 
         <div class="copybox" style="margin:12px 0 18px">
           <input class="input" id="publicLink" readonly>
@@ -151,7 +152,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </div>
 
-<script src="main.js"></script>
-
+  <!-- main app script (module) -->
+  <script type="module" src="main.js"></script>
 </body>
 </html>
