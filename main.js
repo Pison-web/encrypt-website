@@ -82,23 +82,24 @@ const DB = {
     }
   },
 
-  async createProfile(id, name="") {
-    try {
-      await this.ensureSignedIn();
-    } catch(e) {
-      throw e;
-    }
-    const ownerUid = auth.currentUser?.uid || null;
-    if(!ownerUid) throw new Error('No auth uid available');
+  async createProfile(profileId, name="", secretId) {
+  try {
+    await this.ensureSignedIn();
+  } catch(e) {
+    throw e;
+  }
+  const ownerUid = auth.currentUser?.uid || null;
+  if(!ownerUid) throw new Error('No auth uid available');
 
-    await setDoc(doc(db, "profiles", id), {
-      id,
-      name,
-      createdAt: serverTimestamp(),
-      ownerUid
-    });
-    return { ownerUid };
-  },
+  await setDoc(doc(db, "profiles", profileId), {
+    id: profileId,
+    secret: secretId,          // 🔑 save private secret
+    name,
+    createdAt: serverTimestamp(),
+    ownerUid
+  });
+  return { ownerUid, secret: secretId };
+},
 
   async getProfile(id) {
     const snap = await getDoc(doc(db, "profiles", id));
@@ -205,17 +206,20 @@ window.addEventListener('hashchange', route);
 /* Create links */
 $('#createLink')?.addEventListener('click', async ()=>{
   const name = $('#displayName')?.value.trim();
-  const id = uid();
-  try {
-    await DB.createProfile(id, name);
-  } catch(e) {
-    toast("Could not create profile — check console.");
-    console.error(e);
-    return;
-  }
+  const profileId = uid();    // public id
+  const secretId  = uid();    // private secret
 
-  const inbox = `${location.origin}${location.pathname}#/inbox/${id}`;
-  const send = `${location.origin}${location.pathname}#/send/${id}`;
+  let profileData;
+try {
+  profileData = await DB.createProfile(profileId, name, secretId);
+} catch(e) {
+  toast("Could not create profile — check console.");
+  console.error(e);
+  return;
+}
+
+const inbox = `${location.origin}${location.pathname}#/inbox/${profileId}-${profileData.secret}`;
+const send  = `${location.origin}${location.pathname}#/send/${profileId}`;
 
   const live = $('#livePreview');
   if(live){
@@ -259,22 +263,29 @@ $('#sendBtn')?.addEventListener('click', async ()=>{
 });
 
 /* Inbox rendering (owner) */
-async function renderInbox(id){
+/* Inbox rendering (owner) */
+async function renderInbox(hashId){
+  // split into public profileId and private secretId
+  const [profileId, secretId] = hashId.split('-');
   let profile;
   try {
-    profile = await DB.getProfile(id);
+    profile = await DB.getProfile(profileId);
   } catch(e){
     console.error(e);
     toast('Error loading profile');
     return;
   }
 
-  // DEBUG: current auth uid and owner uid
-  console.log("Current user UID:", auth.currentUser?.uid);
-  console.log("Profile owner UID:", profile?.ownerUid);
+  // verify secret
+  if(profile.secret !== secretId){
+    $('#emptyInbox').textContent = 'Invalid inbox link (secret mismatch)';
+    $('#emptyInbox').style.display = 'block';
+    return;
+  }
 
   $('#inboxOwner').textContent = profile?.name ? `— ${profile.name}` : '';
-  $('#publicLink').value = `${location.origin}${location.pathname}#/send/${id}`;
+  // show only public send link
+  $('#publicLink').value = `${location.origin}${location.pathname}#/send/${profileId}`;
 
   const list = $('#messagesList');
   list.innerHTML = '';
@@ -282,7 +293,7 @@ async function renderInbox(id){
   // fetch messages
   let items = [];
   try {
-    items = await DB.getMessages(id);
+    items = await DB.getMessages(profileId);  // ✅ use profileId, not id
   } catch(e) {
     console.error(e);
     $('#emptyInbox').textContent = 'You must be the owner to view this inbox (open this link in the browser that created it).';
@@ -319,9 +330,9 @@ async function renderInbox(id){
     btn.addEventListener('click', async (e)=>{
       const messageId = e.currentTarget.getAttribute('data-id');
       try {
-        await DB.delMessage(id, messageId);
+        await DB.delMessage(profileId, messageId); // ✅ use profileId
         toast('Message deleted');
-        await renderInbox(id);
+        await renderInbox(hashId); // reload same inbox
       } catch(err) {
         console.error(err);
         toast('Could not delete (check owner & permissions)');
@@ -329,6 +340,7 @@ async function renderInbox(id){
     });
   });
 }
+
 
 /* Copy buttons */
 $('#copyPublic')?.addEventListener('click', ()=>navigator.clipboard.writeText($('#publicLink').value).then(()=>toast('Public link copied')));
@@ -339,8 +351,9 @@ $('#copySend')?.addEventListener('click', ()=>navigator.clipboard.writeText($('#
 $('#openInbox')?.addEventListener('click', async ()=>{
   const ps = await getDocs(collection(db, "profiles"));
   if(!ps.empty){
-    const first = ps.docs[0].id;
-    location.hash = `#/inbox/${first}`;
+    const firstDoc = ps.docs[0];
+    const profile = firstDoc.data();
+    location.hash = `#/inbox/${profile.id}-${profile.secret}`;
   } else {
     toast('No inbox found. Create your link first!');
   }
