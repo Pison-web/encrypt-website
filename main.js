@@ -221,12 +221,18 @@ async function route(){
 
   if (view === 'send' && id) {
   $('#view-send').classList.add('active');
-
-  // ✅ Extract only the public profileId (ignore secret if present)
   const profileId = id.split('-')[0];
-  const profile = await DB.getProfile(profileId);
 
-  // ✅ Show correct name
+  // 🔹 Wait until Firebase Auth + Firestore are ready before fetching
+  await authReady;
+  let profile = null;
+
+  try {
+    profile = await DB.getProfile(profileId);
+  } catch (err) {
+    console.warn('Could not load profile:', err);
+  }
+
   if (profile?.name) {
     $('#sendToName').textContent = profile.name;
   } else {
