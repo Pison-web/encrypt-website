@@ -520,8 +520,7 @@ toggle?.addEventListener('click', () => {
         <p class="muted" style="margin-top:6px;">Didn’t get the email? Check your spam folder or resend below.</p>
         <button class="btn" id="resendBtn">Resend Verification Email</button>
         <p class="muted" style="margin-top:10px;">
-          Once verified, <a href="#/account">click here to log in</a>.
-        </p>
+        Once verified, <a href="#/account" id="gotoLoginLink">click here to log in</a>.</p>
       </div>
     `;
 
@@ -543,6 +542,14 @@ toggle?.addEventListener('click', () => {
   }
 });
 
+  // 🔁 Redirect to login page after verification
+  $('#gotoLoginLink')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  toast('Once your email is verified, log in below');
+  location.hash = '#/account';
+});
+
+
 
   $('#loginBtn')?.addEventListener('click', async () => {
     const email = $('#email')?.value.trim();
@@ -550,11 +557,12 @@ toggle?.addEventListener('click', () => {
     if (!email || !password) return toast('Enter your email and password');
     try {
       const userCred = await signInWithEmailAndPassword(auth, email, password);
-      if (!userCred.user.emailVerified) {
-        toast('Please verify your email first');
-        await signOut(auth);
-        return;
-      }
+      await userCred.user.reload(); // refresh Firebase user state
+    if (!userCred.user.emailVerified) {
+     toast('Please verify your email first, then try again.');
+     await signOut(auth);
+  return;
+}
       toast('Login successful');
       location.hash = '#/';
     } catch (e) {
@@ -577,16 +585,27 @@ $('#btnSharePublic')?.addEventListener('click', ()=>navigator.clipboard.writeTex
 $('#copySend')?.addEventListener('click', ()=>navigator.clipboard.writeText($('#sendLink').value).then(()=>toast('Send page link copied')));
 
 /* KPI click handlers */
+/* KPI click handlers */
 $('#openInbox')?.addEventListener('click', async ()=>{
-  const ps = await getDocs(collection(db, "profiles"));
-  if(!ps.empty){
-    const firstDoc = ps.docs[0];
-    const profile = firstDoc.data();
-    location.hash = `#/inbox/${profile.id}-${profile.secret}`;
-  } else {
+  if (!auth.currentUser) return toast('Please log in first!');
+  
+  // Query inboxes owned by the current user only
+  const q = query(collection(db, "profiles"), where("ownerUid", "==", auth.currentUser.uid));
+  const ps = await getDocs(q);
+
+  if (ps.empty) {
     toast('No inbox found. Create your link first!');
+    return;
   }
+
+  // ✅ Pick the first (or latest) inbox owned by this user
+  const firstDoc = ps.docs[0];
+  const profile = firstDoc.data();
+
+  // Redirect to the correct inbox view
+  location.hash = `#/inbox/${profile.id}-${profile.secret}`;
 });
+
 $('#openLinks')?.addEventListener('click', ()=>document.getElementById('live-preview')?.scrollIntoView({ behavior: 'smooth' }));
 $('#openSenders')?.addEventListener('click', ()=>toast('Unlimited anonymous senders can message you.'));
 $('#logoutBtn')?.addEventListener('click', async ()=>{
