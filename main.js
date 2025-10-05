@@ -4,13 +4,20 @@ import {
   getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs,
   deleteDoc, query, orderBy, serverTimestamp, where
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
 import {
   getAuth,
   signInAnonymously,
   onAuthStateChanged,
   setPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+
+import { sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+
 
 /* ----------------------------
    Firebase config (your project)
@@ -58,10 +65,33 @@ const authReady = new Promise(res => { _resolveAuthReady = res; });
 })();
 
 // Track auth state and resolve initial promise once
-onAuthStateChanged(auth, (user)=>{
+onAuthStateChanged(auth, (user) => {
   currentUser = user;
-  // resolve only once
-  if(_resolveAuthReady){ _resolveAuthReady(); _resolveAuthReady = null; }
+
+  // 🔹 Show/hide top logout button
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.style.display = user ? 'inline-block' : 'none';
+  }
+
+  // 🔹 Optional: Hide “Create Account” card if already signed in
+  const createAccountCard = document.querySelector('[onclick="location.hash=\'#/account\'"]');
+  if (createAccountCard) {
+    createAccountCard.style.display = user ? 'none' : 'block';
+  }
+
+  // 🔹 Update KPI when user logs in/out
+  const kpi = document.getElementById('kpiMessages');
+  if (kpi) {
+    if (user) DB.countAll().then((n) => (kpi.textContent = String(n)));
+    else kpi.textContent = '0';
+  }
+
+  // 🔹 Resolve the initial auth promise (only once)
+  if (_resolveAuthReady) {
+    _resolveAuthReady();
+    _resolveAuthReady = null;
+  }
 });
 
 /* ----------------------------
@@ -107,6 +137,13 @@ const DB = {
     const data = snap.data();
     if(data.createdAt && data.createdAt.toDate) data.createdAtISO = data.createdAt.toDate().toISOString();
     return data;
+  },
+
+    async listProfilesByOwner() {
+    if (!auth.currentUser) return [];
+    const q = query(collection(db, "profiles"), where("ownerUid", "==", auth.currentUser.uid));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => d.data());
   },
 
   // Add a message (anyone can call this)
@@ -195,6 +232,18 @@ async function route(){
     await renderInbox(id);
     return;
   }
+  
+    if(view === 'my-inboxes'){
+    $('#view-my-inboxes').classList.add('active');
+    await renderMyInboxes();
+    return;
+  }
+
+    if(view === 'account'){
+    $('#view-account').classList.add('active');
+    initAccountPage(); // 💡 new helper we’ll define next
+    return;
+  }
 
   // default -> home
   $('#view-home').classList.add('active');
@@ -205,6 +254,9 @@ window.addEventListener('hashchange', route);
 
 /* Create links */
 $('#createLink')?.addEventListener('click', async ()=>{
+  if (!auth.currentUser) return toast('Please log in first!');
+  if (!auth.currentUser.emailVerified) return toast('Verify your email before creating an inbox.');
+
   const name = $('#displayName')?.value.trim();
   const profileId = uid();    // public id
   const secretId  = uid();    // private secret
@@ -341,6 +393,162 @@ async function renderInbox(hashId){
   });
 }
 
+async function renderMyInboxes(){
+  const list = $('#inboxesList');
+  list.innerHTML = '';
+
+  let profiles = [];
+  try {
+    profiles = await DB.listProfilesByOwner();
+  } catch(e){
+    console.error(e);
+    toast('Could not load inboxes');
+    return;
+  }
+
+  if(profiles.length === 0){
+    $('#emptyInboxes').style.display = 'block';
+    return;
+  } else {
+    $('#emptyInboxes').style.display = 'none';
+  }
+
+  profiles.forEach(p => {
+    const el = document.createElement('div');
+    el.className = 'card clickable';
+    el.innerHTML = `
+      <h3 style="margin:0">${esc(p.name || 'Unnamed Inbox')}</h3>
+      <p class="muted" style="margin:6px 0">Created: ${p.createdAt?.toDate ? p.createdAt.toDate().toLocaleString() : 'unknown'}</p>
+      <div class="row" style="margin-top:8px">
+        <a class="btn small" href="#/inbox/${p.id}-${p.secret}">Open Inbox</a>
+        <a class="btn small secondary" href="#/send/${p.id}">Public Link</a>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+}
+
+/* ----------------------------
+   ACCOUNT (Register / Login)
+   ---------------------------- */
+async function initAccountPage() {
+  const container = $('#view-account');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="card" style="max-width:400px;margin:auto;">
+      <h2>👤 Account</h2>
+      ${auth.currentUser ? `
+        <p>Signed in as: <strong>${auth.currentUser.email || 'Anonymous'}</strong></p>
+        <p class="muted">${auth.currentUser.emailVerified ? '✅ Email verified' : '❌ Not verified'}</p>
+        <button class="btn" id="logoutBtn">Sign Out</button>
+      ` : `
+        <input class="input" id="email" placeholder="Email address" type="email" />
+
+    <div class="password-wrapper" style="position:relative;">
+  <input class="input" id="password" placeholder="Password" type="password" style="padding-right:60px;" />
+  <span id="togglePassword" style="
+    position:absolute;
+    right:10px;
+    top:50%;
+    transform:translateY(-50%);
+    cursor:pointer;
+    color:var(--muted-color, #999);
+    font-size:14px;
+    user-select:none;
+  ">Show</span>
+    </div>
+        <div class="row" style="margin-top:10px;gap:8px;">
+          <button class="btn" id="registerBtn">Register</button>
+          <button class="btn secondary" id="loginBtn">Login</button>
+        </div>
+      `}
+    </div>
+  `;
+  // 👁️ Password show/hide toggle
+const passwordInput = $('#password');
+const toggle = $('#togglePassword');
+toggle?.addEventListener('click', () => {
+  if (!passwordInput) return;
+  if (passwordInput.type === 'password') {
+    passwordInput.type = 'text';
+    toggle.textContent = 'Hide';
+  } else {
+    passwordInput.type = 'password';
+    toggle.textContent = 'Show';
+  }
+});
+
+
+  $('#registerBtn')?.addEventListener('click', async () => {
+  const email = $('#email')?.value.trim();
+  const password = $('#password')?.value.trim();
+  if (!email || !password) return toast('Please enter both email & password');
+
+  try {
+    const userCred = await createUserWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(userCred.user);
+    toast('Verification email sent! Check your inbox or spam folder.');
+
+    // 💡 Show resend option immediately after registration
+    container.innerHTML = `
+      <div class="card" style="max-width:400px;margin:auto;text-align:center;">
+        <h2>Email Verification Sent</h2>
+        <p class="muted">We sent a verification email to <strong>${email}</strong>.<br>
+        Please verify before logging in.</p>
+        <p class="muted" style="margin-top:6px;">Didn’t get the email? Check your spam folder or resend below.</p>
+        <button class="btn" id="resendBtn">Resend Verification Email</button>
+        <p class="muted" style="margin-top:10px;">
+          Once verified, <a href="#/account">click here to log in</a>.
+        </p>
+      </div>
+    `;
+
+    // 🔁 Add resend verification button handler
+    $('#resendBtn')?.addEventListener('click', async () => {
+      try {
+        await sendEmailVerification(userCred.user);
+        toast('Verification email resent!');
+      } catch (err) {
+        console.error(err);
+        toast('Could not resend email: ' + err.message);
+      }
+    });
+
+    await signOut(auth);
+  } catch (e) {
+    console.error(e);
+    toast('Registration failed: ' + e.message);
+  }
+});
+
+
+  $('#loginBtn')?.addEventListener('click', async () => {
+    const email = $('#email')?.value.trim();
+    const password = $('#password')?.value.trim();
+    if (!email || !password) return toast('Enter your email and password');
+    try {
+      const userCred = await signInWithEmailAndPassword(auth, email, password);
+      if (!userCred.user.emailVerified) {
+        toast('Please verify your email first');
+        await signOut(auth);
+        return;
+      }
+      toast('Login successful');
+      location.hash = '#/';
+    } catch (e) {
+      console.error(e);
+      toast('Login failed: ' + e.message);
+    }
+  });
+
+  $('#logoutBtn')?.addEventListener('click', async () => {
+    await signOut(auth);
+    toast('Signed out');
+    location.hash = '#/';
+  });
+}
+
 
 /* Copy buttons */
 $('#copyPublic')?.addEventListener('click', ()=>navigator.clipboard.writeText($('#publicLink').value).then(()=>toast('Public link copied')));
@@ -360,6 +568,12 @@ $('#openInbox')?.addEventListener('click', async ()=>{
 });
 $('#openLinks')?.addEventListener('click', ()=>document.getElementById('live-preview')?.scrollIntoView({ behavior: 'smooth' }));
 $('#openSenders')?.addEventListener('click', ()=>toast('Unlimited anonymous senders can message you.'));
+$('#logoutBtn')?.addEventListener('click', async ()=>{
+  await signOut(auth);
+  toast('Signed out');
+  location.hash = '#/';
+});
+
 
 /* Boot: wait for auth to be initialized, then route */
 authReady.then(()=>{ route(); });
