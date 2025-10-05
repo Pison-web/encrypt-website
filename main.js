@@ -35,6 +35,14 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+
+
+/* ----------------------------
+   LIGHT THEME AS DEFAULT (5TH OCT, 2025-11:27pm)
+   ---------------------------- */
+document.body.classList.add('light-theme');
+
+
 /* ----------------------------
    Utilities
    ---------------------------- */
@@ -509,33 +517,39 @@ toggle?.addEventListener('click', () => {
   try {
     const userCred = await createUserWithEmailAndPassword(auth, email, password);
     await sendEmailVerification(userCred.user);
-    toast('Verification email sent! Check your inbox or spam folder.');
+toast('Verification email sent! Check your inbox or spam folder.');
 
-    // 💡 Show resend option immediately after registration
-    container.innerHTML = `
-      <div class="card" style="max-width:400px;margin:auto;text-align:center;">
-        <h2>Email Verification Sent</h2>
-        <p class="muted">We sent a verification email to <strong>${email}</strong>.<br>
-        Please verify before logging in.</p>
-        <p class="muted" style="margin-top:6px;">Didn’t get the email? Check your spam folder or resend below.</p>
-        <button class="btn" id="resendBtn">Resend Verification Email</button>
-        <p class="muted" style="margin-top:10px;">
-        Once verified, <a href="#/account" id="gotoLoginLink">click here to log in</a>.</p>
-      </div>
-    `;
+// 💡 Show resend + login link after registration
+container.innerHTML = `
+  <div class="card" style="max-width:400px;margin:auto;text-align:center;">
+    <h2>Email Verification Sent</h2>
+    <p class="muted">We sent a verification email to <strong>${email}</strong>.<br>
+    Please verify before logging in.</p>
+    <p class="muted" style="margin-top:6px;">Didn’t get the email? Check your spam folder or resend below.</p>
+    <button class="btn" id="resendBtn">Resend Verification Email</button>
+    <p class="muted" style="margin-top:10px;">
+    Once verified, open the login page and sign in using your email and password.</p>
+  </div>
+`;
 
-    // 🔁 Add resend verification button handler
-    $('#resendBtn')?.addEventListener('click', async () => {
-      try {
-        await sendEmailVerification(userCred.user);
-        toast('Verification email resent!');
-      } catch (err) {
-        console.error(err);
-        toast('Could not resend email: ' + err.message);
-      }
-    });
+// 🔁 Reattach the handlers *after* DOM update
+$('#resendBtn')?.addEventListener('click', async () => {
+  try {
+    await sendEmailVerification(userCred.user);
+    toast('Verification email resent!');
+  } catch (err) {
+    console.error(err);
+    toast('Could not resend email: ' + err.message);
+  }
+});
 
-    await signOut(auth);
+$('#gotoLoginLink')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  toast('Once your email is verified, log in below');
+  location.hash = '#/account';
+});
+
+await signOut(auth);
   } catch (e) {
     console.error(e);
     toast('Registration failed: ' + e.message);

@@ -79,7 +79,7 @@
       border:1px dashed #2a3568; border-radius:14px; padding:20px; text-align:center; color:var(--muted)
     }
 
-    .toast{position:fixed; right:18px; bottom:18px; background:#fe56f3; border:1px solid #2a3568; color:var(--text); padding:12px 14px; border-radius:12px; box-shadow:var(--shadow); opacity:0; transform:translateY(8px); transition:all .3s ease}
+    .toast{position:fixed; right:18px; bottom:18px; background:#12ff4d; border:1px solid #2a3568; color:var(--text); padding:12px 14px; border-radius:12px; box-shadow:var(--shadow); opacity:0; transform:translateY(8px); transition:all .5s ease}
     .toast.show{opacity:1; transform:none}
 
     .badge{display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; border:1px solid #28408a; background:#0b163a; color:#cbd6ff; font-size:12px}
@@ -185,4 +185,102 @@ body.light-theme .card.preview {
   background: #ffffff;
   border: 1px solid #ddd;
   color: var(--text);
+}
+
+/* ==============================
+   📱 Mobile Responsiveness Fix
+   ============================== */
+
+/* Make everything fit nicely on smaller screens */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+  }
+
+  .wrap, .container {
+    padding: 12px;
+    width: 100%;
+  }
+
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .brand h1 {
+    font-size: 20px;
+  }
+
+  .btn {
+    font-size: 15px;
+    padding: 10px 14px;
+  }
+
+  .card {
+    padding: 16px;
+    margin: 10px 0;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .grid3 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .row {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+  }
+
+  textarea, input, button {
+    max-width: 100%;
+  }
+
+  .copybox {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .copybox .btn.small {
+    width: 100%;
+  }
+
+  .message {
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  footer {
+    text-align: center;
+    padding: 20px 0;
+  }
+}
+
+/* iPhone-specific small screen adjustments */
+@media (max-width: 430px) {
+  body {
+    font-size: 15px;
+  }
+
+  .btn, .input, textarea {
+    width: 100%;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .hero {
+    margin-top: 10px;
+  }
+
+  .kpi .num {
+    font-size: 22px;
+  }
 }
