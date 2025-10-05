@@ -219,13 +219,23 @@ async function route(){
   const [_, view, id] = hash.split('/');
   $$('[data-view]').forEach(v=>v.classList.remove('active'));
 
-  if(view === 'send' && id){
-    $('#view-send').classList.add('active');
-    const profile = await DB.getProfile(id);
-    $('#sendToName').textContent = profile?.name || 'Ecrypt user';
-    $('#sendLink').value = location.href;
-    return;
+  if (view === 'send' && id) {
+  $('#view-send').classList.add('active');
+
+  // ✅ Extract only the public profileId (ignore secret if present)
+  const profileId = id.split('-')[0];
+  const profile = await DB.getProfile(profileId);
+
+  // ✅ Show correct name
+  if (profile?.name) {
+    $('#sendToName').textContent = profile.name;
+  } else {
+    $('#sendToName').textContent = 'Encrypt user';
   }
+
+  $('#sendLink').value = location.href;
+  return;
+}
 
   if(view === 'inbox' && id){
     $('#view-inbox').classList.add('active');
@@ -300,17 +310,22 @@ const send  = `${location.origin}${location.pathname}#/send/${profileId}`;
 });
 
 /* Send page logic (public) */
-$('#sendBtn')?.addEventListener('click', async ()=>{
-  const parts = location.hash.split('/');
-  const id = parts[2];
-  const text = $('#msg')?.value.trim();
-  const alias = $('#alias')?.value.trim().slice(0,30);
-  if(!id) return toast('Invalid link');
-  if(!text) return toast('Write a message first');
+$('#sendBtn')?.addEventListener('click', async () => {
+  const hash = location.hash;
+  const match = hash.match(/#\/send\/([^/]+)/);
+  const profileId = match ? match[1].split('-')[0] : null;
 
-  const ok = await DB.addMessage(id, { text, alias });
-  if(!ok) return toast('Inbox not found');
-  $('#msg').value = ''; $('#alias').value = '';
+  const text = $('#msg')?.value.trim();
+  const alias = $('#alias')?.value.trim().slice(0, 30);
+
+  if (!profileId) return toast('Invalid link');
+  if (!text) return toast('Write a message first');
+
+  const ok = await DB.addMessage(profileId, { text, alias });
+  if (!ok) return toast('Inbox not found');
+
+  $('#msg').value = '';
+  $('#alias').value = '';
   toast('Message sent anonymously ✅');
 });
 
