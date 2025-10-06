@@ -355,7 +355,7 @@ header::after {
 
 /* Light theme version */
 body.light-theme header::after {
-  border-bottom: 2px dashed rgba(0, 0, 0, 0.2);
+  border-bottom: 2px dashed rgb(0, 0, 0);
 }
 
 /* 📱 Mobile view: underline only the brand (logo, ENCRYPT, TRUSTED) */
@@ -379,7 +379,7 @@ body.light-theme header::after {
   }
 
   body.light-theme .brand::after {
-    border-bottom: 2px dashed rgba(0, 0, 0, 0.25);
+    border-bottom: 2px dashed rgb(0, 0, 0);
   }
 }
 
