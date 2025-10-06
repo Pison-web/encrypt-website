@@ -334,3 +334,52 @@ body.light-theme .card.preview {
   }
 }
 
+/* ==========================
+   🔹 Decorative Underline (Broken Line Style)
+   ========================== */
+
+/* Default (Desktop view) */
+header {
+  position: relative;
+  padding-bottom: 10px;
+}
+
+header::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  border-bottom: 2px dashed rgba(255, 255, 255, 0.25);
+}
+
+/* Light theme version */
+body.light-theme header::after {
+  border-bottom: 2px dashed rgba(0, 0, 0, 0.2);
+}
+
+/* 📱 Mobile view: underline only the brand (logo, ENCRYPT, TRUSTED) */
+@media (max-width: 768px) {
+  header::after {
+    display: none; /* hide desktop underline */
+  }
+
+  .brand {
+    position: relative;
+    padding-bottom: 8px;
+  }
+
+  .brand::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    border-bottom: 2px dashed rgba(255, 255, 255, 0.25);
+  }
+
+  body.light-theme .brand::after {
+    border-bottom: 2px dashed rgba(0, 0, 0, 0.25);
+  }
+}
+
