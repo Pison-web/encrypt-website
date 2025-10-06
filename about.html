@@ -17,6 +17,76 @@
     .section{margin-top:18px}
     .features{display:grid; grid-template-columns:repeat(2,1fr); gap:12px}
     @media(max-width:900px){.features{grid-template-columns:1fr}}
+
+
+    /* =======================
+   💌 Email Link Styling
+   ======================= */
+.email-link {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline dotted;
+  text-underline-offset: 4px;
+  transition: color 0.3s, text-decoration-color 0.3s;
+}
+
+.email-link:hover {
+  color: var(--accent-2);
+  text-decoration-color: var(--accent-2);
+}
+
+/* Light theme compatibility */
+body.light-theme .email-link {
+  color: var(--accent);
+  text-decoration-color: #075fe3;
+}
+
+body.light-theme .email-link:hover {
+  color: var(--accent-2);
+  text-decoration-color: var(--accent-2);
+}
+
+/* ==============================
+   ⚡ Beautiful Footer Styling
+   ============================== */
+.site-footer {
+  text-align: center;
+  padding: 40px 20px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.2);
+  margin-top: 40px;
+  font-size: 15px;
+  color: var(--muted);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.3));
+}
+
+.footer-link {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.footer-link:hover {
+  color: var(--accent-2);
+  text-shadow: 0 0 8px var(--accent-2);
+}
+
+/* 🌞 Light theme support */
+body.light-theme .site-footer {
+  border-top: 1px dashed rgba(0, 0, 0, 0.2);
+  background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(230,230,230,0.5));
+  color: #333;
+}
+
+body.light-theme .footer-link {
+  color: var(--accent);
+}
+
+body.light-theme .footer-link:hover {
+  color: var(--accent-2);
+  text-shadow: none;
+}
+
+
   </style>
 </head>
 <body>
@@ -87,19 +157,32 @@
           </div>
 
           <div class="section" id="contact">
-            <strong>Contact</strong>
-            <p>Email: encrypt@gmail.com</p>
-          </div>
-
-        </div>
+  <strong>Contact</strong>
+  <p>
+    Email:
+    <a href="mailto:encrypt.assist@gmail.com?subject=Help%20with%20Encrypt&body=Hello%20Encrypt%20Team,"
+       class="email-link">
+      encrypt.assist@gmail.com
+    </a>
+  </p>
+   </div>
+</div>
       </section>
     </main>
 
-    <footer>
-         This Website was built by <a href="https://www.instagram.com/big_p_lawwd/", style="color: rgb(29, 39, 172);">PISON SAABOANE</a>
-        <P>A student of Ghana Communication Technology University <strong>GCTU</strong></P>
+    <footer class="site-footer">
+  <p>
+    This website was built by 
+    <a href="https://www.instagram.com/big_p_lawwd/" target="_blank" class="footer-link">
+      <strong>PISON SAABOANE</strong>
+    </a>
+  </p>
+  <p>
+    A proud student of 
+    <strong>Ghana Communication Technology University (GCTU)</strong>
+  </p>
     </footer>
-  </div>
+</div>
   <script>
 
     /* ----------------------------
