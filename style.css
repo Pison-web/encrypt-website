@@ -188,54 +188,79 @@ body.light-theme .card.preview {
 }
 
 /* ==============================
-   📱 Mobile Responsiveness Fix
+   📱 Improved Mobile Responsiveness + Button Adjustment
    ============================== */
 
-/* Make everything fit nicely on smaller screens */
 @media (max-width: 768px) {
   html, body {
     overflow-x: hidden;
   }
 
   .wrap, .container {
-    padding: 12px;
+    padding: 14px;
     width: 100%;
   }
 
   header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .brand {
+    justify-content: center;
   }
 
   .brand h1 {
-    font-size: 20px;
+    font-size: 22px;
   }
 
-  .btn {
+  .nav {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* 🔹 Make main buttons (Toggle Theme, Home, Create Link) slightly bigger */
+  .btn,
+  .btn.secondary,
+  .btn.ghost {
+    font-size: 16px;
+    padding: 12px 20px;
+    border-radius: 14px;
+  }
+
+  .btn.small {
     font-size: 15px;
-    padding: 10px 14px;
+    padding: 10px 16px;
   }
 
   .card {
-    padding: 16px;
-    margin: 10px 0;
+    padding: 18px;
+    margin: 12px 0;
   }
 
   .hero {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 18px;
+    text-align: center;
   }
 
-  .grid3 {
-    grid-template-columns: 1fr;
-    gap: 12px;
+  .title {
+    font-size: 32px;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    font-size: 15px;
   }
 
   .row {
     flex-wrap: wrap;
     justify-content: center;
-    text-align: center;
+    gap: 10px;
   }
 
   textarea, input, button {
@@ -244,7 +269,7 @@ body.light-theme .card.preview {
 
   .copybox {
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
   }
 
   .copybox .btn.small {
@@ -252,28 +277,40 @@ body.light-theme .card.preview {
   }
 
   .message {
-    padding: 12px;
+    padding: 14px;
     font-size: 15px;
   }
 
   footer {
     text-align: center;
-    padding: 20px 0;
+    padding: 24px 0;
   }
 }
 
-/* iPhone-specific small screen adjustments */
+/* 🔹 Even smaller iPhones (like iPhone 7/8/SE) */
 @media (max-width: 430px) {
   body {
     font-size: 15px;
   }
 
-  .btn, .input, textarea {
-    width: 100%;
+  .brand h1 {
+    font-size: 20px;
+  }
+
+  .btn,
+  .btn.secondary,
+  .btn.ghost {
+    font-size: 17px;
+    padding: 13px 22px;
+  }
+
+  .btn.small {
+    font-size: 15px;
+    padding: 10px 18px;
   }
 
   .card {
-    padding: 14px;
+    padding: 16px;
   }
 
   .hero {
@@ -283,4 +320,17 @@ body.light-theme .card.preview {
   .kpi .num {
     font-size: 22px;
   }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  footer {
+    font-size: 14px;
+  }
 }
+
