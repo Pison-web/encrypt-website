@@ -383,3 +383,42 @@ body.light-theme header::after {
   }
 }
 
+/* ==============================
+   ⚡ Beautiful Footer Styling
+   ============================== */
+.site-footer {
+  text-align: center;
+  padding: 40px 20px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.2);
+  margin-top: 40px;
+  font-size: 15px;
+  color: var(--muted);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.3));
+}
+
+.footer-link {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.footer-link:hover {
+  color: var(--accent-2);
+  text-shadow: 0 0 8px var(--accent-2);
+}
+
+/* 🌞 Light theme support */
+body.light-theme .site-footer {
+  border-top: 1px dashed rgba(0, 0, 0, 0.2);
+  background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(230,230,230,0.5));
+  color: #333;
+}
+
+body.light-theme .footer-link {
+  color: var(--accent);
+}
+
+body.light-theme .footer-link:hover {
+  color: var(--accent-2);
+  text-shadow: none;
+}
