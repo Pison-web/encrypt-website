@@ -525,10 +525,10 @@ container.innerHTML = `
     <h2>Email Verification Sent</h2>
     <p class="muted">We sent a verification email to <strong>${email}</strong>.<br>
     Please verify before logging in.</p>
-    <p class="muted" style="margin-top:6px;">Didn’t get the email? Check your spam folder or resend below.</p>
+    <p class="muted" style="margin-top:6px;">Didn’t get the email? Check your <strong>spam folder</strong> or resend below.</p>
     <button class="btn" id="resendBtn">Resend Verification Email</button>
     <p class="muted" style="margin-top:10px;">
-    Once verified, open the login page and sign in using your email and password.</p>
+    Once verified, open the Home page and Log in using your email and password.</p>
   </div>
 `;
 
