@@ -333,7 +333,12 @@ const send  = `${location.origin}${location.pathname}#/send/${profileId}`;
         </div>
       </div>`;
     live.querySelector('.copyInbox')?.addEventListener('click', ()=>navigator.clipboard.writeText(inbox).then(()=>toast('Inbox link copied')));
-    live.querySelector('.copyPublic')?.addEventListener('click', ()=>navigator.clipboard.writeText(send).then(()=>toast('Public link copied')));
+    live.querySelector('.copyPublic')?.addEventListener('click', ()=>{
+  const message = `💬 Send me an anonymous message via Encrypt: ${send}`;
+  navigator.clipboard.writeText(message).then(()=>{
+    toast('Public link (with message) copied!');
+  });
+});
   }
 
   toast('Your Encrypt links are ready');
