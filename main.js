@@ -497,7 +497,7 @@ async function initAccountPage() {
   if (auth.currentUser) {
     container.innerHTML = `
       <div class="auth-card card active" style="text-align:center;">
-        <h2>👋 Account</h2>
+        <h2>Account</h2>
         <p>Signed in as: <strong>${esc(auth.currentUser.email || 'Anonymous')}</strong></p>
         <p class="muted">${auth.currentUser.emailVerified ? '✅ Email verified' : '❌ Not verified'}</p>
         <button class="btn" id="logoutBtn" style="margin-top:10px;">Sign Out</button>
@@ -634,7 +634,7 @@ async function initAccountPage() {
           <div class="auth-card card" style="text-align:center;">
             <h2>📧 Verify Your Email</h2>
             <p class="muted">We sent a verification email to <strong>${esc(email)}</strong>.</p>
-            <p class="muted" style="margin-top:6px;">Didn’t get it? <a href="#" id="resendBtn">Resend</a>.</p>
+            <p class="muted" style="margin-top:6px;">Didn’t get an email? check your <strong>Spam or Junk folders</strong><a href="#" id="resendBtn">Resend</a>.</p>
             <p class="muted" style="margin-top:10px;">Once verified, <a href="#" id="goLogin">click here to log in</a>.</p>
           </div>
         `);
@@ -705,63 +705,114 @@ $('#logoutBtn')?.addEventListener('click', async ()=>{
 // =======================================
 async function renderProfilePage() {
   const container = $('#profileContainer');
+  if (!container) {
+    console.error("Profile container not found in HTML");
+    return;
+  }
+
   if (!auth.currentUser) {
     container.innerHTML = `<p>Please log in to view your profile.</p>`;
     return;
   }
 
-  // fetch user doc
-  const snap = await getDoc(doc(db, "users", auth.currentUser.uid));
+  const user = auth.currentUser;
+
+  // Fetch user data
+  const snap = await getDoc(doc(db, "users", user.uid));
   const data = snap.exists() ? snap.data() : {};
   const joined = data.createdAt?.toDate
-    ? data.createdAt.toDate().toLocaleString()
-    : "Unknown";
+  ? data.createdAt.toDate().toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    })
+  : "Unknown";
 
   container.innerHTML = `
     <div style="max-width:420px;margin:auto;">
+      <h2 style="text-align:center;">My Profile</h2>
       <p><strong>First Name:</strong> ${esc(data.firstName || "-")}</p>
       <p><strong>Last Name:</strong> ${esc(data.lastName || "-")}</p>
-      <p><strong>Email:</strong> ${esc(auth.currentUser.email)}</p>
-      <p class="muted">Joined Encrypt on ${joined}</p>
+      <p><strong>Email:</strong> ${esc(user.email)}</p>
+      <h5><p class="muted">You joined Encrypt on ${joined}</p></h5>
       <hr>
+
       <button class="btn" id="changePwBtn">Change Password</button>
       <div id="changePwForm" style="display:none;margin-top:10px;">
-        <input class="input" id="newPw" type="password" placeholder="New Password">
-        <input class="input" id="confirmPw" type="password" placeholder="Re-enter Password" style="margin-top:6px;">
+        <div style="position:relative; margin-bottom:8px;">
+          <input class="input" id="newPw" type="password" placeholder="New Password" style="padding-right:60px;">
+          <span id="toggleNewPw" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:#999;font-size:14px;">Show</span>
+        </div>
+        <div style="position:relative;">
+          <input class="input" id="confirmPw" type="password" placeholder="Re-enter Password" style="padding-right:60px;">
+          <span id="toggleConfirmPw" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:#999;font-size:14px;">Show</span>
+        </div>
         <button class="btn small" id="savePwBtn" style="margin-top:8px;">Save New Password</button>
       </div>
-      <button class="btn ghost danger" id="deleteAccBtn" style="margin-top:14px;">Delete Account</button>
+
+      <button class="btn ghost danger" id="deleteAccBtn" style="margin-top:18px;">Delete Account</button>
     </div>
   `;
 
-  // password change
-  $('#changePwBtn')?.addEventListener('click', () => {
-    $('#changePwForm').style.display =
-      $('#changePwForm').style.display === 'none' ? 'block' : 'none';
+  // Password toggle buttons
+  const newPwInput = $('#newPw');
+  const confirmPwInput = $('#confirmPw');
+  const toggleNewPw = $('#toggleNewPw');
+  const toggleConfirmPw = $('#toggleConfirmPw');
+
+  toggleNewPw?.addEventListener('click', () => {
+    newPwInput.type = newPwInput.type === 'password' ? 'text' : 'password';
+    toggleNewPw.textContent = newPwInput.type === 'password' ? 'Show' : 'Hide';
   });
 
+  toggleConfirmPw?.addEventListener('click', () => {
+    confirmPwInput.type = confirmPwInput.type === 'password' ? 'text' : 'password';
+    toggleConfirmPw.textContent = confirmPwInput.type === 'password' ? 'Show' : 'Hide';
+  });
+
+  // Show/Hide Change Password Form
+  $('#changePwBtn')?.addEventListener('click', () => {
+    const form = $('#changePwForm');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+  });
+
+  // Save new password
   $('#savePwBtn')?.addEventListener('click', async () => {
     const pw1 = $('#newPw').value.trim();
     const pw2 = $('#confirmPw').value.trim();
     if (!pw1 || pw1 !== pw2) return toast("Passwords don’t match.");
+
     try {
-      await updatePassword(auth.currentUser, pw1);
+      await updatePassword(user, pw1);
       toast("Password updated ✅");
       $('#changePwForm').style.display = 'none';
     } catch (err) {
       console.error(err);
-      toast("Error: " + err.message);
+      if (err.code === "auth/requires-recent-login") {
+        toast("Please log in again to change your password.");
+      } else {
+        toast("Error: " + err.message);
+      }
     }
   });
 
-  // delete account
+  // Delete account
   $('#deleteAccBtn')?.addEventListener('click', async () => {
-    if (!confirm("Delete your account permanently?")) return;
+    if (!user.emailVerified) {
+      toast("Verify your email first before deleting your account.");
+      return;
+    }
+
+    if (!confirm("⚠️ Deleting your account will erase all your data with Encrypt. Continue?")) return;
+
     try {
-      await deleteDoc(doc(db, "users", auth.currentUser.uid));
-      await deleteUser(auth.currentUser);
-      toast("Account deleted.");
-      location.hash = "#/";
+      await deleteDoc(doc(db, "users", user.uid)); // delete Firestore data
+      await deleteUser(user); // delete auth account
+      toast("Account deleted successfully.");
+      location.hash = "#/"; // redirect home
     } catch (err) {
       console.error(err);
       toast("Deletion failed: " + err.message);
