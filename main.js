@@ -634,7 +634,7 @@ async function initAccountPage() {
           <div class="auth-card card" style="text-align:center;">
             <h2>📧 Verify Your Email</h2>
             <p class="muted">We sent a verification email to <strong>${esc(email)}</strong>.</p>
-            <p class="muted" style="margin-top:6px;">Didn’t get an email? check your <strong>Spam or Junk folders</strong><a href="#" id="resendBtn">Resend</a>.</p>
+            <p class="muted" style="margin-top:6px;">Didn’t get an email? check your <strong>Spam or Junk folders or click on Resend</strong>  <a href="#" id="resendBtn">Resend</a>.</p>
             <p class="muted" style="margin-top:10px;">Once verified, <a href="#" id="goLogin">click here to log in</a>.</p>
           </div>
         `);
