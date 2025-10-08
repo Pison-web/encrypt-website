@@ -536,10 +536,14 @@ container.innerHTML = `
 $('#resendBtn')?.addEventListener('click', async () => {
   try {
     await sendEmailVerification(userCred.user);
-    toast('Verification email resent!');
+    toast('Verification email resent! Check your inbox or spam folder.');
   } catch (err) {
     console.error(err);
-    toast('Could not resend email: ' + err.message);
+    if (err.code === 'auth/too-many-requests') {
+      toast('Please wait a minute before requesting another email.');
+    } else {
+      toast('Could not resend email: ' + err.message);
+    }
   }
 });
 
@@ -573,10 +577,18 @@ await signOut(auth);
       const userCred = await signInWithEmailAndPassword(auth, email, password);
       await userCred.user.reload(); // refresh Firebase user state
     if (!userCred.user.emailVerified) {
-     toast('Please verify your email first, then try again.');
-     await signOut(auth);
+  toast('Please verify your email first — a new verification email has been sent.');
+  try {
+    await sendEmailVerification(userCred.user);
+    toast('We’ve sent a verification email — check your inbox or spam folder.');
+  } catch (err) {
+    console.error(err);
+    toast('Could not resend email: ' + err.message);
+  }
+  await signOut(auth);
   return;
 }
+
       toast('Login successful');
       location.hash = '#/';
     } catch (e) {
@@ -598,7 +610,6 @@ $('#copyPublic')?.addEventListener('click', ()=>navigator.clipboard.writeText($(
 $('#btnSharePublic')?.addEventListener('click', ()=>navigator.clipboard.writeText($('#publicLink').value).then(()=>toast('Public link copied')));
 $('#copySend')?.addEventListener('click', ()=>navigator.clipboard.writeText($('#sendLink').value).then(()=>toast('Send page link copied')));
 
-/* KPI click handlers */
 /* KPI click handlers */
 $('#openInbox')?.addEventListener('click', async ()=>{
   if (!auth.currentUser) return toast('Please log in first!');
