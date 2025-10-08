@@ -669,12 +669,30 @@ async function initAccountPage() {
   }
 }
 
+/* Copy buttons — with preset message */
+$('#copyPublic')?.addEventListener('click', ()=>{
+  const link = $('#publicLink')?.value;
+  const message = `💬 Send me an anonymous message via Encrypt: ${link}`;
+  navigator.clipboard.writeText(message).then(()=>{
+    toast('Public link (with message) copied!');
+  });
+});
 
+$('#btnSharePublic')?.addEventListener('click', ()=>{
+  const link = $('#publicLink')?.value;
+  const message = `💬 Send me an anonymous message via Encrypt: ${link}`;
+  navigator.clipboard.writeText(message).then(()=>{
+    toast('Public link (with message) copied!');
+  });
+});
 
-/* Copy buttons */
-$('#copyPublic')?.addEventListener('click', ()=>navigator.clipboard.writeText($('#publicLink').value).then(()=>toast('Public link copied')));
-$('#btnSharePublic')?.addEventListener('click', ()=>navigator.clipboard.writeText($('#publicLink').value).then(()=>toast('Public link copied')));
-$('#copySend')?.addEventListener('click', ()=>navigator.clipboard.writeText($('#sendLink').value).then(()=>toast('Send page link copied')));
+$('#copySend')?.addEventListener('click', ()=>{
+  const link = $('#sendLink')?.value;
+  const message = `💌 Send me an anonymous message via Encrypt: ${link}`;
+  navigator.clipboard.writeText(message).then(()=>{
+    toast('Send link (with message) copied!');
+  });
+});
 
 /* KPI click handlers */
 $('#openInbox')?.addEventListener('click', async ()=>{
