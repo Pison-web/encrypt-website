@@ -336,7 +336,7 @@ const send  = `${location.origin}${location.pathname}#/send/${profileId}`;
     live.querySelector('.copyPublic')?.addEventListener('click', ()=>navigator.clipboard.writeText(send).then(()=>toast('Public link copied')));
   }
 
-  toast('Your Ecrypt links are ready');
+  toast('Your Encrypt links are ready');
   const kpi = $('#kpiMessages'); if(kpi) kpi.textContent = String(await DB.countAll());
 });
 
@@ -634,7 +634,7 @@ async function initAccountPage() {
           <div class="auth-card card" style="text-align:center;">
             <h2>📧 Verify Your Email</h2>
             <p class="muted">We sent a verification email to <strong>${esc(email)}</strong>.</p>
-            <p class="muted" style="margin-top:6px;">Didn’t get it? <a href="#" id="resendBtn">Resend</a>.</p>
+            <p class="muted" style="margin-top:6px;">Didn’t get an email? Check your <strong>Spam or Junk folders</strong><a href="#" id="resendBtn">Resend</a>.</p>
             <p class="muted" style="margin-top:10px;">Once verified, <a href="#" id="goLogin">click here to log in</a>.</p>
           </div>
         `);
@@ -722,23 +722,77 @@ async function renderProfilePage() {
       <p><strong>First Name:</strong> ${esc(data.firstName || "-")}</p>
       <p><strong>Last Name:</strong> ${esc(data.lastName || "-")}</p>
       <p><strong>Email:</strong> ${esc(auth.currentUser.email)}</p>
-      <p class="muted">Joined Encrypt on ${joined}</p>
+      <h6><p class="muted">You joined Encrypt on ${joined}</p></h6>
       <hr>
       <button class="btn" id="changePwBtn">Change Password</button>
       <div id="changePwForm" style="display:none;margin-top:10px;">
-        <input class="input" id="newPw" type="password" placeholder="New Password">
-        <input class="input" id="confirmPw" type="password" placeholder="Re-enter Password" style="margin-top:6px;">
-        <button class="btn small" id="savePwBtn" style="margin-top:8px;">Save New Password</button>
-      </div>
-      <button class="btn ghost danger" id="deleteAccBtn" style="margin-top:14px;">Delete Account</button>
-    </div>
-  `;
+  <div style="position:relative; margin-bottom:8px;">
+    <input class="input" id="newPw" type="password" placeholder="New Password" style="padding-right:60px;">
+    <span id="toggleNewPw" style="
+      position:absolute;
+      right:10px;
+      top:50%;
+      transform:translateY(-50%);
+      cursor:pointer;
+      color:var(--muted-color,#999);
+      font-size:14px;
+      user-select:none;
+    ">Show</span>
+  </div>
+
+  <div style="position:relative;">
+    <input class="input" id="confirmPw" type="password" placeholder="Re-enter Password" style="padding-right:60px;">
+    <span id="toggleConfirmPw" style="
+      position:absolute;
+      right:10px;
+      top:50%;
+      transform:translateY(-50%);
+      cursor:pointer;
+      color:var(--muted-color,#999);
+      font-size:14px;
+      user-select:none;
+    ">Show</span>
+  </div>
+  <button class="btn small" id="savePwBtn" style="margin-top:8px;">Save New Password</button>
+  <button class="btn ghost danger" id="deleteAccBtn" style="margin-top:14px;">Delete Account</button>
+</div>
+`;
+// 👁️ Inline show/hide password toggles
+const newPw = $('#newPw');
+const confirmPw = $('#confirmPw');
+const toggleNewPw = $('#toggleNewPw');
+const toggleConfirmPw = $('#toggleConfirmPw');
+
+toggleNewPw?.addEventListener('click', () => {
+  if (newPw.type === 'password') {
+    newPw.type = 'text';
+    toggleNewPw.textContent = 'Hide';
+  } else {
+    newPw.type = 'password';
+    toggleNewPw.textContent = 'Show';
+  }
+});
+
+toggleConfirmPw?.addEventListener('click', () => {
+  if (confirmPw.type === 'password') {
+    confirmPw.type = 'text';
+    toggleConfirmPw.textContent = 'Hide';
+  } else {
+    confirmPw.type = 'password';
+    toggleConfirmPw.textContent = 'Show';
+  }
+});
 
   // password change
   $('#changePwBtn')?.addEventListener('click', () => {
-    $('#changePwForm').style.display =
-      $('#changePwForm').style.display === 'none' ? 'block' : 'none';
-  });
+  const pwForm = $('#changePwForm');
+  pwForm.classList.toggle('open');
+  pwForm.style.maxHeight = pwForm.classList.contains('open')
+    ? pwForm.scrollHeight + "px"
+    : "0";
+  pwForm.style.overflow = "hidden";
+  pwForm.style.transition = "max-height 0.4s ease";
+});
 
   $('#savePwBtn')?.addEventListener('click', async () => {
     const pw1 = $('#newPw').value.trim();
@@ -755,18 +809,61 @@ async function renderProfilePage() {
   });
 
   // delete account
-  $('#deleteAccBtn')?.addEventListener('click', async () => {
-    if (!confirm("Delete your account permanently?")) return;
-    try {
-      await deleteDoc(doc(db, "users", auth.currentUser.uid));
-      await deleteUser(auth.currentUser);
-      toast("Account deleted.");
-      location.hash = "#/";
-    } catch (err) {
-      console.error(err);
+  // delete account (with warning + verified email required)
+$('#deleteAccBtn')?.addEventListener('click', async () => {
+  const user = auth.currentUser;
+  if (!user) return toast("You must be logged in.");
+
+  // 🛑 Step 1 — Email verification check
+  if (!user.emailVerified) {
+    toast("Please verify your email before deleting your account.");
+    return;
+  }
+
+  // 🛑 Step 2 — Warning message
+  const warn = confirm(
+    "⚠️ Deleting your account will erase ALL your data with Encrypt.\n\n" +
+    "This includes your inboxes, messages, and user profile.\n\n" +
+    "This action cannot be undone.\n\nDo you still want to continue?"
+  );
+  if (!warn) return;
+
+  try {
+    // 🔁 Step 3 — Reauthenticate (Firebase requires this)
+    const email = user.email;
+    const password = prompt(
+      `Please confirm your password for ${email} to permanently delete your account:`
+    );
+    if (!password) return toast("Deletion canceled.");
+
+    const userCred = await signInWithEmailAndPassword(auth, email, password);
+
+    // 🔹 Step 4 — Delete from Firestore first
+    await deleteDoc(doc(db, "users", user.uid));
+
+    // Optional: delete user’s profiles too
+    const q = query(collection(db, "profiles"), where("ownerUid", "==", user.uid));
+    const ps = await getDocs(q);
+    for (const p of ps.docs) {
+      await deleteDoc(doc(db, "profiles", p.id));
+    }
+
+    // 🔹 Step 5 — Delete the Auth account
+    await deleteUser(userCred.user);
+
+    toast("Your account and data have been permanently deleted.");
+    location.hash = "#/";
+  } catch (err) {
+    console.error(err);
+    if (err.code === "auth/wrong-password") {
+      toast("Wrong password. Account not deleted.");
+    } else if (err.code === "auth/requires-recent-login") {
+      toast("Please log in again and try deleting your account.");
+    } else {
       toast("Deletion failed: " + err.message);
     }
-  });
+  }
+});
 }
 
 

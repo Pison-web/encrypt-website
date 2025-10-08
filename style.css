@@ -436,3 +436,8 @@ body.light-theme .footer-link:hover {
   opacity: 0;
   transform: translateY(-10px);
 }
+
+#changePwForm {
+  transition: max-height 0.4s ease;
+  overflow: hidden;
+}
