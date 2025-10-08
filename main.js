@@ -13,8 +13,11 @@ import {
   browserLocalPersistence,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signOut
+  signOut,
+  updatePassword,     // ✅ added this
+  deleteUser          //  added this
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+
 
 import { sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
 
@@ -121,18 +124,25 @@ const DB = {
   },
 
   async createProfile(profileId, name="", secretId) {
-  try {
-    await this.ensureSignedIn();
-  } catch(e) {
-    throw e;
-  }
   const ownerUid = auth.currentUser?.uid || null;
-  if(!ownerUid) throw new Error('No auth uid available');
+  if (!ownerUid) throw new Error('No auth uid available');
+
+  // If no name provided, use their account first name if available
+  let finalName = name;
+  if (!finalName) {
+    const userDoc = await getDoc(doc(db, "users", ownerUid));
+    if (userDoc.exists()) {
+      const d = userDoc.data();
+      finalName = `${d.firstName || ''} ${d.lastName || ''}`.trim() || "Anonymous";
+    } else {
+      finalName = "Anonymous";
+    }
+  }
 
   await setDoc(doc(db, "profiles", profileId), {
     id: profileId,
-    secret: secretId,          // 🔑 save private secret
-    name,
+    secret: secretId,
+    name: finalName,
     createdAt: serverTimestamp(),
     ownerUid
   });
@@ -269,6 +279,13 @@ async function route(){
     return;
   }
 
+  if (view === 'profile') {
+  $('#view-profile').classList.add('active');
+  await renderProfilePage();
+  return;
+}
+
+
   // default -> home
   $('#view-home').classList.add('active');
   const kpi = $('#kpiMessages');
@@ -343,7 +360,6 @@ $('#sendBtn')?.addEventListener('click', async () => {
   toast('Message sent anonymously ✅');
 });
 
-/* Inbox rendering (owner) */
 /* Inbox rendering (owner) */
 async function renderInbox(hashId){
   // split into public profileId and private secretId
@@ -464,145 +480,190 @@ async function initAccountPage() {
   const container = $('#view-account');
   if (!container) return;
 
-  container.innerHTML = `
-    <div class="card" style="max-width:400px;margin:auto;">
-      <h2>👤 Account</h2>
-      ${auth.currentUser ? `
-        <p>Signed in as: <strong>${auth.currentUser.email || 'Anonymous'}</strong></p>
+  // Smooth animation between login/register cards
+  function animateReplace(html) {
+    const card = container.querySelector('.auth-card');
+    if (card) card.classList.add('fade-out');
+    setTimeout(() => {
+      container.innerHTML = html;
+      requestAnimationFrame(() => {
+        const newCard = container.querySelector('.auth-card');
+        if (newCard) newCard.classList.add('active');
+      });
+    }, 350);
+  }
+
+  // If user is already signed in
+  if (auth.currentUser) {
+    container.innerHTML = `
+      <div class="auth-card card active" style="text-align:center;">
+        <h2>👋 Account</h2>
+        <p>Signed in as: <strong>${esc(auth.currentUser.email || 'Anonymous')}</strong></p>
         <p class="muted">${auth.currentUser.emailVerified ? '✅ Email verified' : '❌ Not verified'}</p>
-        <button class="btn" id="logoutBtn">Sign Out</button>
-      ` : `
-        <input class="input" id="email" placeholder="Email address" type="email" />
-
-    <div class="password-wrapper" style="position:relative;">
-  <input class="input" id="password" placeholder="Password" type="password" style="padding-right:60px;" />
-  <span id="togglePassword" style="
-    position:absolute;
-    right:10px;
-    top:50%;
-    transform:translateY(-50%);
-    cursor:pointer;
-    color:var(--muted-color, #999);
-    font-size:14px;
-    user-select:none;
-  ">Show</span>
-    </div>
-        <div class="row" style="margin-top:10px;gap:8px;">
-          <button class="btn" id="registerBtn">Register</button>
-          <button class="btn secondary" id="loginBtn">Login</button>
-        </div>
-      `}
-    </div>
-  `;
-  // 👁️ Password show/hide toggle
-const passwordInput = $('#password');
-const toggle = $('#togglePassword');
-toggle?.addEventListener('click', () => {
-  if (!passwordInput) return;
-  if (passwordInput.type === 'password') {
-    passwordInput.type = 'text';
-    toggle.textContent = 'Hide';
-  } else {
-    passwordInput.type = 'password';
-    toggle.textContent = 'Show';
-  }
-});
-
-
-  $('#registerBtn')?.addEventListener('click', async () => {
-  const email = $('#email')?.value.trim();
-  const password = $('#password')?.value.trim();
-  if (!email || !password) return toast('Please enter both email & password');
-
-  try {
-    const userCred = await createUserWithEmailAndPassword(auth, email, password);
-    await sendEmailVerification(userCred.user);
-toast('Verification email sent! Check your inbox or spam folder.');
-
-// 💡 Show resend + login link after registration
-container.innerHTML = `
-  <div class="card" style="max-width:400px;margin:auto;text-align:center;">
-    <h2>Email Verification Sent</h2>
-    <p class="muted">We sent a verification email to <strong>${email}</strong>.<br>
-    Please verify before logging in.</p>
-    <p class="muted" style="margin-top:6px;">Didn’t get the email? Check your <strong>spam folder</strong> or resend below.</p>
-    <button class="btn" id="resendBtn">Resend Verification Email</button>
-    <p class="muted" style="margin-top:10px;">
-    Once verified, open the Home page and Log in using your email and password.</p>
-  </div>
-`;
-
-// 🔁 Reattach the handlers *after* DOM update
-$('#resendBtn')?.addEventListener('click', async () => {
-  try {
-    await sendEmailVerification(userCred.user);
-    toast('Verification email resent! Check your inbox or spam folder.');
-  } catch (err) {
-    console.error(err);
-    if (err.code === 'auth/too-many-requests') {
-      toast('Please wait a minute before requesting another email.');
-    } else {
-      toast('Could not resend email: ' + err.message);
-    }
-  }
-});
-
-$('#gotoLoginLink')?.addEventListener('click', (e) => {
-  e.preventDefault();
-  toast('Once your email is verified, log in below');
-  location.hash = '#/account';
-});
-
-await signOut(auth);
-  } catch (e) {
-    console.error(e);
-    toast('Registration failed: ' + e.message);
-  }
-});
-
-  // 🔁 Redirect to login page after verification
-  $('#gotoLoginLink')?.addEventListener('click', (e) => {
-  e.preventDefault();
-  toast('Once your email is verified, log in below');
-  location.hash = '#/account';
-});
-
-
-
-  $('#loginBtn')?.addEventListener('click', async () => {
-    const email = $('#email')?.value.trim();
-    const password = $('#password')?.value.trim();
-    if (!email || !password) return toast('Enter your email and password');
-    try {
-      const userCred = await signInWithEmailAndPassword(auth, email, password);
-      await userCred.user.reload(); // refresh Firebase user state
-    if (!userCred.user.emailVerified) {
-  toast('Please verify your email first — a new verification email has been sent.');
-  try {
-    await sendEmailVerification(userCred.user);
-    toast('We’ve sent a verification email — check your inbox or spam folder.');
-  } catch (err) {
-    console.error(err);
-    toast('Could not resend email: ' + err.message);
-  }
-  await signOut(auth);
-  return;
-}
-
-      toast('Login successful');
+        <button class="btn" id="logoutBtn" style="margin-top:10px;">Sign Out</button>
+      </div>
+    `;
+    $('#logoutBtn')?.addEventListener('click', async () => {
+      await signOut(auth);
+      toast('Signed out');
       location.hash = '#/';
-    } catch (e) {
-      console.error(e);
-      toast('Login failed: ' + e.message);
-    }
-  });
+    });
+    return;
+  }
 
-  $('#logoutBtn')?.addEventListener('click', async () => {
-    await signOut(auth);
-    toast('Signed out');
-    location.hash = '#/';
-  });
+  showLoginForm();
+
+  /* ------------------------
+     LOGIN & REGISTER FORMS
+     ------------------------ */
+  function showLoginForm() {
+    animateReplace(`
+      <div class="auth-card card">
+        <h3>Login</h3>
+        <input class="input" id="email" placeholder="Email address" type="email" />
+        <div class="password-wrapper" style="position:relative;">
+          <input class="input" id="password" placeholder="Password" type="password" style="padding-right:60px;">
+          <span id="togglePassword" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted-color,#999);font-size:14px;">Show</span>
+        </div>
+        <button class="btn" id="loginBtn" style="margin-top:10px;">Login</button>
+        <h5><p class="muted" style="margin-top:12px;">Don’t have an account? <a href="#" id="showRegister">Sign up</a></p></h5>
+      </div>
+    `);
+    setTimeout(attachLoginHandlers, 360);
+  }
+
+  function showRegisterForm() {
+    animateReplace(`
+      <div class="auth-card card">
+        <h3>Register</h3>
+        <input class="input" id="firstName" placeholder="First Name" type="text" />
+        <input class="input" id="lastName" placeholder="Last Name" type="text" />
+        <input class="input" id="email" placeholder="Email address" type="email" />
+        <div class="password-wrapper" style="position:relative;">
+          <input class="input" id="password" placeholder="Password" type="password" style="padding-right:60px;">
+          <span id="togglePassword" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted-color,#999);font-size:14px;">Show</span>
+        </div>
+        <button class="btn" id="registerBtn" style="margin-top:10px;">Register</button>
+        <h5><p class="muted" style="margin-top:12px;">Already have an account? <a href="#" id="showLogin">Login</a></p></h5>
+      </div>
+    `);
+    setTimeout(attachRegisterHandlers, 360);
+  }
+
+  /* ------------------------
+     LOGIN LOGIC
+     ------------------------ */
+  function attachLoginHandlers() {
+    $('#showRegister')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      showRegisterForm();
+    });
+
+    const pw = $('#password');
+    const toggle = $('#togglePassword');
+    toggle?.addEventListener('click', () => {
+      if (!pw) return;
+      pw.type = pw.type === 'password' ? 'text' : 'password';
+      toggle.textContent = pw.type === 'password' ? 'Show' : 'Hide';
+    });
+
+    $('#loginBtn')?.addEventListener('click', async () => {
+      const email = $('#email')?.value.trim();
+      const password = $('#password')?.value.trim();
+      if (!email || !password) return toast('Enter your email and password');
+      try {
+        const userCred = await signInWithEmailAndPassword(auth, email, password);
+        await userCred.user.reload();
+        if (!userCred.user.emailVerified) {
+          try {
+            await sendEmailVerification(userCred.user);
+            toast('Please verify your email first — verification email resent.');
+          } catch (err) {
+            toast('Could not resend verification: ' + err.message);
+          }
+          await signOut(auth);
+          return;
+        }
+        toast('Login successful');
+        location.hash = '#/';
+      } catch (err) {
+        toast('Login failed: ' + err.message);
+      }
+    });
+  }
+
+  /* ------------------------
+     REGISTER LOGIC
+     ------------------------ */
+  function attachRegisterHandlers() {
+    $('#showLogin')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      showLoginForm();
+    });
+
+    const pw = $('#password');
+    const toggle = $('#togglePassword');
+    toggle?.addEventListener('click', () => {
+      if (!pw) return;
+      pw.type = pw.type === 'password' ? 'text' : 'password';
+      toggle.textContent = pw.type === 'password' ? 'Show' : 'Hide';
+    });
+
+    $('#registerBtn')?.addEventListener('click', async () => {
+      const firstName = $('#firstName')?.value.trim();
+      const lastName = $('#lastName')?.value.trim();
+      const email = $('#email')?.value.trim();
+      const password = $('#password')?.value.trim();
+
+      if (!firstName || !lastName || !email || !password)
+        return toast('Please fill in all fields');
+
+      try {
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(userCred.user);
+        toast('Verification email sent! Check your inbox or spam folder.');
+
+        await setDoc(doc(db, "users", userCred.user.uid), {
+          firstName,
+          lastName,
+          email,
+          createdAt: serverTimestamp()
+        });
+
+        animateReplace(`
+          <div class="auth-card card" style="text-align:center;">
+            <h2>📧 Verify Your Email</h2>
+            <p class="muted">We sent a verification email to <strong>${esc(email)}</strong>.</p>
+            <p class="muted" style="margin-top:6px;">Didn’t get it? <a href="#" id="resendBtn">Resend</a>.</p>
+            <p class="muted" style="margin-top:10px;">Once verified, <a href="#" id="goLogin">click here to log in</a>.</p>
+          </div>
+        `);
+
+        setTimeout(() => {
+          $('#resendBtn')?.addEventListener('click', async (e) => {
+            e.preventDefault();
+            try {
+              await sendEmailVerification(userCred.user);
+              toast('Verification email resent!');
+            } catch (err) {
+              toast('Error: ' + err.message);
+            }
+          });
+
+          $('#goLogin')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            showLoginForm();
+          });
+        }, 360);
+
+        await signOut(auth);
+      } catch (err) {
+        toast('Registration failed: ' + err.message);
+      }
+    });
+  }
 }
+
 
 
 /* Copy buttons */
@@ -638,6 +699,75 @@ $('#logoutBtn')?.addEventListener('click', async ()=>{
   toast('Signed out');
   location.hash = '#/';
 });
+
+// =======================================
+// PROFILE PAGE — VIEW / UPDATE / DELETE
+// =======================================
+async function renderProfilePage() {
+  const container = $('#profileContainer');
+  if (!auth.currentUser) {
+    container.innerHTML = `<p>Please log in to view your profile.</p>`;
+    return;
+  }
+
+  // fetch user doc
+  const snap = await getDoc(doc(db, "users", auth.currentUser.uid));
+  const data = snap.exists() ? snap.data() : {};
+  const joined = data.createdAt?.toDate
+    ? data.createdAt.toDate().toLocaleString()
+    : "Unknown";
+
+  container.innerHTML = `
+    <div style="max-width:420px;margin:auto;">
+      <p><strong>First Name:</strong> ${esc(data.firstName || "-")}</p>
+      <p><strong>Last Name:</strong> ${esc(data.lastName || "-")}</p>
+      <p><strong>Email:</strong> ${esc(auth.currentUser.email)}</p>
+      <p class="muted">Joined Encrypt on ${joined}</p>
+      <hr>
+      <button class="btn" id="changePwBtn">Change Password</button>
+      <div id="changePwForm" style="display:none;margin-top:10px;">
+        <input class="input" id="newPw" type="password" placeholder="New Password">
+        <input class="input" id="confirmPw" type="password" placeholder="Re-enter Password" style="margin-top:6px;">
+        <button class="btn small" id="savePwBtn" style="margin-top:8px;">Save New Password</button>
+      </div>
+      <button class="btn ghost danger" id="deleteAccBtn" style="margin-top:14px;">Delete Account</button>
+    </div>
+  `;
+
+  // password change
+  $('#changePwBtn')?.addEventListener('click', () => {
+    $('#changePwForm').style.display =
+      $('#changePwForm').style.display === 'none' ? 'block' : 'none';
+  });
+
+  $('#savePwBtn')?.addEventListener('click', async () => {
+    const pw1 = $('#newPw').value.trim();
+    const pw2 = $('#confirmPw').value.trim();
+    if (!pw1 || pw1 !== pw2) return toast("Passwords don’t match.");
+    try {
+      await updatePassword(auth.currentUser, pw1);
+      toast("Password updated ✅");
+      $('#changePwForm').style.display = 'none';
+    } catch (err) {
+      console.error(err);
+      toast("Error: " + err.message);
+    }
+  });
+
+  // delete account
+  $('#deleteAccBtn')?.addEventListener('click', async () => {
+    if (!confirm("Delete your account permanently?")) return;
+    try {
+      await deleteDoc(doc(db, "users", auth.currentUser.uid));
+      await deleteUser(auth.currentUser);
+      toast("Account deleted.");
+      location.hash = "#/";
+    } catch (err) {
+      console.error(err);
+      toast("Deletion failed: " + err.message);
+    }
+  });
+}
 
 
 /* Boot: wait for auth to be initialized, then route */

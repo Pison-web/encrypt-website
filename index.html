@@ -79,7 +79,10 @@
               <div class="num">👤</div>
               <div class="muted">Register || Login</div>
             </div>
-
+            <div class="kpi card clickable" onclick="location.hash='#/profile'">
+              <div class="num">⚙️</div>
+              <div class="muted">My Profile</div>
+            </div>
             <div class="kpi card clickable" onclick="location.hash='#/my-inboxes'">
               <div class="num">📂</div>
               <div class="muted">MY INBOXES</div>
@@ -115,8 +118,7 @@
       <strong>PISON SAABOANE</strong>
     </a>
   </p>
-  <p>
-    A proud student of 
+   <p class="muted">A proud student of 
     <strong>Ghana Communication Technology University (GCTU)</strong>
   </p>
     </footer>
@@ -152,6 +154,15 @@
     </div>
   </div>
 </section>
+
+<!-- PROFILE VIEW -->
+<section data-view id="view-profile">
+  <div class="card">
+    <h2>👤 My Profile</h2>
+    <div id="profileContainer"></div>
+  </div>
+</section>
+
 
 <!-- ACCOUNT VIEW -->
 <section data-view id="view-account">

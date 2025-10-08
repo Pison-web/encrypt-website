@@ -422,3 +422,17 @@ body.light-theme .footer-link:hover {
   color: var(--accent-2);
   text-shadow: none;
 }
+
+.auth-card {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.35s ease;
+}
+.auth-card.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+.auth-card.fade-out {
+  opacity: 0;
+  transform: translateY(-10px);
+}
