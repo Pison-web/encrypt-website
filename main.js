@@ -733,7 +733,6 @@ async function renderProfilePage() {
 
   container.innerHTML = `
     <div style="max-width:420px;margin:auto;">
-      <h2 style="text-align:center;">My Profile</h2>
       <p><strong>First Name:</strong> ${esc(data.firstName || "-")}</p>
       <p><strong>Last Name:</strong> ${esc(data.lastName || "-")}</p>
       <p><strong>Email:</strong> ${esc(user.email)}</p>
