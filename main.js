@@ -778,7 +778,17 @@ async function renderProfilePage() {
         <button class="btn small" id="savePwBtn" style="margin-top:8px;">Save New Password</button>
       </div>
 
-      <button class="btn ghost danger" id="deleteAccBtn" style="margin-top:18px;">Delete Account</button>
+      <button class="btn ghost danger" id="deleteAccBtn" style="margin-top:14px;">Delete Account</button>
+<div id="deleteAccForm" style="display:none;margin-top:10px;">
+  <p class="muted" style="font-size:14px;">Deleting your account will erase all your data with Encrypt. Please confirm your email and password to continue.</p>
+  <input class="input" id="delEmail" type="email" placeholder="Confirm Email" style="margin-top:6px;">
+  <div class="password-wrapper" style="position:relative;margin-top:6px;">
+    <input class="input" id="delPw" type="password" placeholder="Confirm Password" style="padding-right:60px;">
+    <span id="toggleDelPw" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted-color,#999);font-size:14px;">Show</span>
+  </div>
+  <button class="btn danger" id="confirmDelBtn" style="margin-top:10px;">Delete Permanently</button>
+  <p class="muted" id="cancelDel" style="margin-top:6px;cursor:pointer;text-decoration:underline;">Cancel</p>
+</div>
     </div>
   `;
 
@@ -824,39 +834,48 @@ async function renderProfilePage() {
     }
   });
 
-  // delete account (with email verification + reauth)
-$('#deleteAccBtn')?.addEventListener('click', async () => {
+// delete account (inline, cleaner with email verification + reauth)
+$('#deleteAccBtn')?.addEventListener('click', () => {
+  const form = $('#deleteAccForm');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+});
+
+// show/hide password in delete form
+$('#toggleDelPw')?.addEventListener('click', () => {
+  const input = $('#delPw');
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    $('#toggleDelPw').textContent = 'Hide';
+  } else {
+    input.type = 'password';
+    $('#toggleDelPw').textContent = 'Show';
+  }
+});
+
+// cancel delete form
+$('#cancelDel')?.addEventListener('click', () => {
+  $('#deleteAccForm').style.display = 'none';
+});
+
+// confirm delete
+$('#confirmDelBtn')?.addEventListener('click', async () => {
   const user = auth.currentUser;
   if (!user) return toast("No user logged in.");
+  if (!user.emailVerified) return toast("Please verify your email before deleting your account.");
 
-  // Require verified email first
-  if (!user.emailVerified) {
-    toast("Please verify your email before deleting your account.");
-    return;
-  }
-
-  // Confirm deletion
-  if (!confirm("⚠️ Deleting your account will erase all your data with Encrypt. This cannot be undone.\n\nDo you wish to continue?")) return;
+  const email = $('#delEmail')?.value.trim();
+  const password = $('#delPw')?.value.trim();
+  if (!email || !password) return toast("Enter your email and password to confirm.");
 
   try {
-    // 🔹 Re-authenticate user before deleting
-    const email = prompt("Please confirm your email address to proceed:");
-    const password = prompt("Enter your password to confirm deletion:");
-    if (!email || !password) return toast("Deletion cancelled.");
-
-    // import reauthentication methods at top if not added yet:
-    // import { reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-
     const credential = EmailAuthProvider.credential(email, password);
     await reauthenticateWithCredential(user, credential);
 
-    // 🔹 Delete user document first
     await deleteDoc(doc(db, "users", user.uid));
-
-    // 🔹 Delete Auth account
     await deleteUser(user);
 
-    toast("Account deleted successfully. Goodbye 👋");
+    toast("Account deleted successfully.");
     location.hash = "#/";
   } catch (err) {
     console.error(err);
@@ -864,7 +883,6 @@ $('#deleteAccBtn')?.addEventListener('click', async () => {
   }
 });
 }
-
 
 /* Boot: wait for auth to be initialized, then route */
 authReady.then(()=>{ route(); });
