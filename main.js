@@ -786,7 +786,10 @@ async function renderProfilePage() {
     <input class="input" id="delPw" type="password" placeholder="Confirm Password" style="padding-right:60px;">
     <span id="toggleDelPw" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted-color,#999);font-size:14px;">Show</span>
   </div>
-  <button class="btn danger" id="confirmDelBtn" style="margin-top:10px , colour:#ffffff;">Delete Permanently</button>
+  <button class="btn" id="confirmDelBtn" 
+  style="margin-top:10px; background:#fff; color:#d9534f; border:1px solid #d9534f;">
+  Delete Permanently
+</button>
   <p class="muted" id="cancelDel" style="margin-top:6px;cursor:pointer;text-decoration:underline;">Cancel</p>
 </div>
     </div>
@@ -885,5 +888,4 @@ $('#confirmDelBtn')?.addEventListener('click', async () => {
 }
 
 /* Boot: wait for auth to be initialized, then route */
-
 authReady.then(()=>{ route(); });
