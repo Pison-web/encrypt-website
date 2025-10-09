@@ -595,7 +595,7 @@ async function initAccountPage() {
         toast('Login successful');
         location.hash = '#/';
       } catch (err) {
-        toast('Login failed: ' + err.message);
+        toast('Login failed - Invalid credential ');
       }
     });
   }
