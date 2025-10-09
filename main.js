@@ -14,9 +14,12 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  updatePassword,     // ✅ added this
-  deleteUser          //  added this
+  updatePassword,
+  deleteUser,
+  reauthenticateWithCredential,   // ✅ new
+  EmailAuthProvider               // new
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+
 
 
 import { sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
@@ -821,25 +824,45 @@ async function renderProfilePage() {
     }
   });
 
-  // Delete account
-  $('#deleteAccBtn')?.addEventListener('click', async () => {
-    if (!user.emailVerified) {
-      toast("Verify your email first before deleting your account.");
-      return;
-    }
+  // delete account (with email verification + reauth)
+$('#deleteAccBtn')?.addEventListener('click', async () => {
+  const user = auth.currentUser;
+  if (!user) return toast("No user logged in.");
 
-    if (!confirm("⚠️ Deleting your account will erase all your data with Encrypt. Continue?")) return;
+  // Require verified email first
+  if (!user.emailVerified) {
+    toast("Please verify your email before deleting your account.");
+    return;
+  }
 
-    try {
-      await deleteDoc(doc(db, "users", user.uid)); // delete Firestore data
-      await deleteUser(user); // delete auth account
-      toast("Account deleted successfully.");
-      location.hash = "#/"; // redirect home
-    } catch (err) {
-      console.error(err);
-      toast("Deletion failed: " + err.message);
-    }
-  });
+  // Confirm deletion
+  if (!confirm("⚠️ Deleting your account will erase all your data with Encrypt. This cannot be undone.\n\nDo you wish to continue?")) return;
+
+  try {
+    // 🔹 Re-authenticate user before deleting
+    const email = prompt("Please confirm your email address to proceed:");
+    const password = prompt("Enter your password to confirm deletion:");
+    if (!email || !password) return toast("Deletion cancelled.");
+
+    // import reauthentication methods at top if not added yet:
+    // import { reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+
+    const credential = EmailAuthProvider.credential(email, password);
+    await reauthenticateWithCredential(user, credential);
+
+    // 🔹 Delete user document first
+    await deleteDoc(doc(db, "users", user.uid));
+
+    // 🔹 Delete Auth account
+    await deleteUser(user);
+
+    toast("Account deleted successfully. Goodbye 👋");
+    location.hash = "#/";
+  } catch (err) {
+    console.error(err);
+    toast("Deletion failed: " + err.message);
+  }
+});
 }
 
 
