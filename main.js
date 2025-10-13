@@ -534,6 +534,8 @@ async function initAccountPage() {
           <span id="togglePassword" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted-color,#999);font-size:14px;">Show</span>
         </div>
         <button class="btn" id="loginBtn" style="margin-top:10px;">Login</button>
+        <p class="muted" style="margin-top:8px;text-align:center;"><a href="#" id="forgotPwLink">Forgot password?</a>
+        </p>
         <h5><p class="muted" style="margin-top:12px;">Don’t have an account? <a href="#" id="showRegister">Sign up</a></p></h5>
       </div>
     `);
@@ -558,6 +560,43 @@ async function initAccountPage() {
     setTimeout(attachRegisterHandlers, 360);
   }
 
+  function showForgotPwForm() {
+  animateReplace(`
+    <div class="auth-card card">
+      <h3>Reset Password</h3>
+      <p class="muted" style="margin-bottom:10px;">
+        Enter your email to receive a password reset link.
+      </p>
+      <input class="input" id="resetEmail" placeholder="Email address" type="email" />
+      <button class="btn" id="resetPwBtn" style="margin-top:10px;">Send Reset Link</button>
+      <p class="muted" style="margin-top:12px;text-align:center;">
+        <a href="#" id="backToLogin">Back to Login</a>
+      </p>
+    </div>
+  `);
+
+  setTimeout(() => {
+    $('#resetPwBtn')?.addEventListener('click', async () => {
+      const email = $('#resetEmail')?.value.trim();
+      if (!email) return toast('Enter your email address.');
+
+      try {
+        const { sendPasswordResetEmail } = await import("https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js");
+        await sendPasswordResetEmail(auth, email);
+        toast('Password reset email sent!');
+        showLoginForm();
+      } catch (err) {
+        toast('Error: ' + err.message);
+      }
+    });
+
+    $('#backToLogin')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      showLoginForm();
+    });
+  }, 360);
+}
+
   /* ------------------------
      LOGIN LOGIC
      ------------------------ */
@@ -566,6 +605,11 @@ async function initAccountPage() {
       e.preventDefault();
       showRegisterForm();
     });
+    $('#forgotPwLink')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      showForgotPwForm();
+    });
+
 
     const pw = $('#password');
     const toggle = $('#togglePassword');
