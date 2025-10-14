@@ -379,7 +379,7 @@ $('#sendBtn')?.addEventListener('click', async () => {
 
   if (!profileId) return toast('Invalid link');
   if (!text) return toast('Write a message first');
-  
+
   const inboxRef = doc(db, "profiles", profileId);
   const inboxSnap = await getDoc(inboxRef);
   if (inboxSnap.exists() && inboxSnap.data().paused) {
@@ -438,22 +438,63 @@ async function renderInbox(hashId){
     $('#emptyInbox').style.display = 'none';
   }
 
-  items.forEach((m)=>{
-    const el = document.createElement('div');
-    el.className='message';
-    const when = new Date(m.at || Date.now()).toLocaleString();
-    const who = m.alias ? esc(m.alias) : 'Anonymous';
-    el.innerHTML = `
-      <div class="meta">
-        <div>From: <strong>${who}</strong></div>
-        <div>${when}</div>
-      </div>
-      <div class="text">${esc(m.text)}</div>
-      <div class="row" style="margin-top:10px; justify-content:flex-end">
-        <button class="btn small ghost danger" aria-label="Delete" data-id="${m.id}">Delete</button>
-      </div>`;
-    list.appendChild(el);
+  items.forEach((m) => {
+  const el = document.createElement("div");
+  el.className = "message clickable";
+  const when = new Date(m.at || Date.now()).toLocaleString();
+  const who = m.alias ? esc(m.alias) : "Anonymous";
+
+  el.dataset.text = m.text;
+  el.dataset.alias = who;
+  el.dataset.time = when;
+
+  el.innerHTML = `
+    <div class="meta">
+      <div>From: <strong>${who}</strong></div>
+      <div>${when}</div>
+    </div>
+    <div class="text">${esc(m.text.substring(0, 80))}${
+    m.text.length > 80 ? "…" : ""
+  }</div>
+    <div class="row" style="margin-top:10px; justify-content:flex-end">
+      <button class="btn small ghost danger" aria-label="Delete" data-id="${m.id}">Delete</button>
+    </div>
+  `;
+
+  list.appendChild(el);
+});
+
+// 💬 Pop-up modal for messages
+const modal = document.getElementById("messageModal");
+const modalTitle = document.getElementById("modalTitle");
+const modalBody = document.getElementById("modalBody");
+const modalTime = document.getElementById("modalTime");
+const closeModal = document.getElementById("closeModal");
+
+document.querySelectorAll(".message.clickable").forEach((card) => {
+  card.addEventListener("click", (e) => {
+    // prevent button clicks (like Delete) from triggering popup
+    if (e.target.tagName === "BUTTON") return;
+
+    const text = card.dataset.text;
+    const alias = card.dataset.alias;
+    const time = card.dataset.time;
+
+    modalTitle.textContent = `Message from ${alias}`;
+    modalBody.textContent = text;
+    modalTime.textContent = time;
+
+    modal.style.display = "flex";
   });
+});
+
+closeModal?.addEventListener("click", () => {
+  modal.style.display = "none";
+});
+
+window.addEventListener("click", (e) => {
+  if (e.target === modal) modal.style.display = "none";
+});
 
   // attach delete handlers
   $$('#messagesList [data-id]').forEach(btn=>{

@@ -53,7 +53,7 @@
 
           <div class="card" style="padding:16px; margin:18px 0">
             <div class="row">
-              <input class="input" id="displayName" placeholder="Display name (optional, e.g., Pison)"/>
+              <input class="input" id="displayName" placeholder="Display name (optional, e.g., Debbie)"/>
               <button class="btn" id="createLink">Create my Link</button>
             </div>
             <p class="muted" style="margin-top:10px">We generate two links: your private inbox link and your public send link.</p>
@@ -146,7 +146,7 @@
     <!-- MY INBOXES VIEW -->
 <section data-view id="view-my-inboxes">
   <div class="card">
-    <h3>📂 Inboxes created</h3>
+    <h3>Inboxes created</h3>
     <p class="muted">Here are all the inboxes you’ve created. Click one to open.</p>
     <div id="inboxesList"></div>
     <div id="emptyInboxes" class="empty" style="display:none">
@@ -195,6 +195,16 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
   </div>
+
+  <!-- Message Popup Modal -->
+<div id="messageModal" class="modal-overlay" style="display:none;">
+  <div class="modal-content">
+    <button id="closeModal" class="close-btn">×</button>
+    <h3 id="modalTitle">Anonymous Message</h3>
+    <p id="modalBody"></p>
+    <p class="muted" id="modalTime"></p>
+  </div>
+</div>
 
   <!-- main app script (module) -->
   <script type="module" src="main.js"></script>
