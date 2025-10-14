@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Encrypt-Anonymous Messages</title>
-  <meta name="description" content="Encrypt lets people send you anonymous messages with a single shareable link." />
-  <meta property="og:title" content="Encrypt — Anonymous Messages">
+  <title>Encrypts-Anonymous Messages</title>
+  <meta name="description" content="Encrypts lets people send you anonymous messages with a single shareable link." />
+  <meta property="og:title" content="Encrypts — Anonymous Messages">
   <meta property="og:description" content="Create and share your unique Encrypt link. Receive honest, anonymous messages safely and privately.">
   <meta property="og:image" content="https://pison-web.github.io/encrypt-website/images/encrypt.png">
   <meta property="og:url" content="https://pison-web.github.io/encrypt-website/">
@@ -31,7 +31,7 @@
             <path d="M4 7l7.2 5.2a2 2 0 0 0 2.4 0L21 7" stroke="white" stroke-opacity=".9" stroke-width="1.4"/>
           </svg>
         </div>
-        <h1>ENCRYPT</h1>
+        <h1>ENCRYPTS</h1>
         <span class="badge" title="All in one file. No server required for demo.">TRUSTED</span>
       </div>
       <nav class="nav">
@@ -53,7 +53,7 @@
 
           <div class="card" style="padding:16px; margin:18px 0">
             <div class="row">
-              <input class="input" id="displayName" placeholder="Display name (optional, e.g., Debbie)"/>
+              <input class="input" id="displayName" placeholder="Display name (optional, e.g., Pison)"/>
               <button class="btn" id="createLink">Create my Link</button>
             </div>
             <p class="muted" style="margin-top:10px">We generate two links: your private inbox link and your public send link.</p>
@@ -84,8 +84,8 @@
               <div class="muted">My Profile</div>
             </div>
             <div class="kpi card clickable" onclick="location.hash='#/my-inboxes'">
-              <div class="num">📂</div>
-              <div class="muted">My Inboxes</div>
+              <div class="num" id="kpiInboxes">0</div>
+              <div class="muted">inboxes</div>
             </div>
             <div class="kpi card clickable" id="openInbox">
               <div class="num" id="kpiMessages">0</div>
@@ -115,7 +115,7 @@
   <p>
     This website was built by 
     <a href="https://www.instagram.com/big_p_lawwd/" target="_blank" class="footer-link">
-      <strong>PISON SAABOANE</strong>
+      <strong>BIG P</strong>
     </a>
   </p>
    <p class="muted">A proud student of 
@@ -200,4 +200,3 @@
   <script type="module" src="main.js"></script>
 </body>
 </html>
-

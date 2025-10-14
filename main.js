@@ -101,6 +101,13 @@ onAuthStateChanged(auth, (user) => {
     else kpi.textContent = '0';
   }
 
+    // 🔹 Update KPI for inbox count
+  const kpiInboxes = document.getElementById('kpiInboxes');
+  if (kpiInboxes) {
+    if (user) DB.countInboxes().then((n) => (kpiInboxes.textContent = String(n)));
+    else kpiInboxes.textContent = '0';
+  }
+
   // 🔹 Resolve the initial auth promise (only once)
   if (_resolveAuthReady) {
     _resolveAuthReady();
@@ -220,6 +227,15 @@ const items = qs.docs.map(d=>{
       });
     }
     return total;   // ✅ missing!
+  },
+
+  // ✅ Count inboxes created by current user
+  async countInboxes() {
+    if (!auth.currentUser) return 0;
+    const uid = auth.currentUser.uid;
+    const q = query(collection(db, "profiles"), where("ownerUid", "==", uid));
+    const snap = await getDocs(q);
+    return snap.size; // total inboxes
   }
 };
 
@@ -293,6 +309,10 @@ async function route(){
   $('#view-home').classList.add('active');
   const kpi = $('#kpiMessages');
   if(kpi) kpi.textContent = String(await DB.countAll());
+
+  const kpiInboxes = $('#kpiInboxes'); 
+  if (kpiInboxes) kpiInboxes.textContent = String(await DB.countInboxes());
+
 }
 window.addEventListener('hashchange', route);
 
