@@ -379,7 +379,12 @@ $('#sendBtn')?.addEventListener('click', async () => {
 
   if (!profileId) return toast('Invalid link');
   if (!text) return toast('Write a message first');
-
+  
+  const inboxRef = doc(db, "profiles", profileId);
+  const inboxSnap = await getDoc(inboxRef);
+  if (inboxSnap.exists() && inboxSnap.data().paused) {
+  return toast("This inbox is currently paused and not accepting messages.");
+}
   const ok = await DB.addMessage(profileId, { text, alias });
   if (!ok) return toast('Inbox not found');
 
@@ -466,38 +471,101 @@ async function renderInbox(hashId){
   });
 }
 
-async function renderMyInboxes(){
+async function renderMyInboxes() {
   const list = $('#inboxesList');
   list.innerHTML = '';
 
   let profiles = [];
   try {
     profiles = await DB.listProfilesByOwner();
-  } catch(e){
+  } catch (e) {
     console.error(e);
     toast('Could not load inboxes');
     return;
   }
 
-  if(profiles.length === 0){
+  if (profiles.length === 0) {
     $('#emptyInboxes').style.display = 'block';
     return;
   } else {
     $('#emptyInboxes').style.display = 'none';
   }
 
-  profiles.forEach(p => {
+  // Render each inbox card
+  profiles.forEach((p) => {
     const el = document.createElement('div');
-    el.className = 'card clickable';
+    el.className = `card inbox-card ${p.paused ? 'paused' : ''}`;
     el.innerHTML = `
-      <h3 style="margin:0">${esc(p.name || 'Unnamed Inbox')}</h3>
-      <p class="muted" style="margin:6px 0">Created: ${p.createdAt?.toDate ? p.createdAt.toDate().toLocaleString() : 'unknown'}</p>
+      <div class="inbox-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 style="margin:0">${esc(p.name || 'Unnamed Inbox')}</h3>
+        <div class="menu-wrapper" style="position:relative;">
+          <button class="menu-btn" data-id="${p.id}" style="background:none;border:none;font-size:20px;cursor:pointer;">⋯</button>
+          <div class="menu-dropdown" id="menu-${p.id}" style="display:none;flex-direction:column;position:absolute;right:0;top:25px;background:#fff;border:1px solid #ddd;border-radius:8px;min-width:130px;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+            <button class="menu-item pause" data-id="${p.id}" style="padding:8px 12px;text-align:left;background:none;border:none;cursor:pointer;">
+              ${p.paused ? 'Resume Link' : 'Pause Link'}
+            </button>
+            <button class="menu-item delete" data-id="${p.id}" style="padding:8px 12px;text-align:left;background:none;border:none;color:#d9534f;cursor:pointer;">
+              Delete Inbox
+            </button>
+          </div>
+        </div>
+      </div>
+      <p class="muted" style="margin:6px 0">Created: ${
+        p.createdAt?.toDate ? p.createdAt.toDate().toLocaleString() : 'unknown'
+      }</p>
+      ${p.paused ? `<p class="muted danger paused-tag">⏸ Inbox paused</p>` : ''}
       <div class="row" style="margin-top:8px">
         <a class="btn small" href="#/inbox/${p.id}-${p.secret}">Open Inbox</a>
         <a class="btn small secondary" href="#/send/${p.id}">Public Link</a>
       </div>
     `;
     list.appendChild(el);
+  });
+
+  // Toggle menu dropdown
+  document.querySelectorAll('.menu-btn').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const id = e.target.dataset.id;
+      document.querySelectorAll('.menu-dropdown').forEach((m) => (m.style.display = 'none'));
+      const dropdown = document.getElementById(`menu-${id}`);
+      if (dropdown) dropdown.style.display = dropdown.style.display === 'flex' ? 'none' : 'flex';
+    });
+  });
+
+  // Pause / Resume inbox toggle
+  document.querySelectorAll('.menu-item.pause').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      const id = e.target.dataset.id;
+      const ref = doc(db, 'profiles', id);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) return toast('Inbox not found.');
+
+      const paused = snap.data().paused === true;
+      try {
+        await setDoc(ref, { paused: !paused }, { merge: true });
+        toast(paused ? 'Inbox resumed ✅' : 'Inbox paused ⏸');
+        await renderMyInboxes(); // refresh
+      } catch (err) {
+        console.error(err);
+        toast('Error: ' + err.message);
+      }
+    });
+  });
+
+  // Delete inbox
+  document.querySelectorAll('.menu-item.delete').forEach((btn) => {
+    btn.addEventListener('click', async (e) => {
+      const id = e.target.dataset.id;
+      if (!confirm('Delete this inbox permanently?')) return;
+      try {
+        await deleteDoc(doc(db, 'profiles', id));
+        toast('Inbox deleted 🗑️');
+        await renderMyInboxes(); // refresh list
+      } catch (err) {
+        console.error(err);
+        toast('Error deleting inbox: ' + err.message);
+      }
+    });
   });
 }
 
