@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 import {
   getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs,
-  deleteDoc, query, orderBy, serverTimestamp, where
+  deleteDoc, query, orderBy, serverTimestamp, where, onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
 import {
@@ -393,11 +393,11 @@ $('#sendBtn')?.addEventListener('click', async () => {
   toast('Message sent anonymously ✅');
 });
 
-/* Inbox rendering (owner) */
+/* Inbox rendering (owner, now REAL-TIME) */
 async function renderInbox(hashId){
-  // split into public profileId and private secretId
   const [profileId, secretId] = hashId.split('-');
   let profile;
+
   try {
     profile = await DB.getProfile(profileId);
   } catch(e){
@@ -414,100 +414,107 @@ async function renderInbox(hashId){
   }
 
   $('#inboxOwner').textContent = profile?.name ? `— ${profile.name}` : '';
-  // show only public send link
   $('#publicLink').value = `${location.origin}${location.pathname}#/send/${profileId}`;
 
   const list = $('#messagesList');
   list.innerHTML = '';
 
-  // fetch messages
-  let items = [];
-  try {
-    items = await DB.getMessages(profileId);  // ✅ use profileId, not id
-  } catch(e) {
-    console.error(e);
-    $('#emptyInbox').textContent = 'You must be the owner to view this inbox (open this link in the browser that created it).';
-    $('#emptyInbox').style.display = 'block';
-    return;
-  }
+  // ✅ Real-time listener
+  const msgsRef = collection(doc(db, "profiles", profileId), "messages");
+  const q = query(msgsRef, orderBy("at", "desc"));
+  let initialLoad = true;
 
-  if(items.length === 0){
-    $('#emptyInbox').style.display = 'block';
-    return;
-  } else {
+  onSnapshot(q, (snapshot) => {
+    if (snapshot.empty) {
+      $('#emptyInbox').style.display = 'block';
+      list.innerHTML = '';
+      return;
+    }
+
     $('#emptyInbox').style.display = 'none';
-  }
+    list.innerHTML = '';
 
-  items.forEach((m) => {
-  const el = document.createElement("div");
-  el.className = "message clickable";
-  const when = new Date(m.at || Date.now()).toLocaleString();
-  const who = m.alias ? esc(m.alias) : "Anonymous";
+    snapshot.docs.forEach((d) => {
+      const m = d.data();
+      const when = m.at?.toDate ? m.at.toDate().toLocaleString() : "Just now";
+      const who = m.alias || "Anonymous";
 
-  el.dataset.text = m.text;
-  el.dataset.alias = who;
-  el.dataset.time = when;
+      const el = document.createElement("div");
+      el.className = "message clickable";
+      el.dataset.text = m.text;
+      el.dataset.alias = who;
+      el.dataset.time = when;
 
-  el.innerHTML = `
-    <div class="meta">
-      <div>From: <strong>${who}</strong></div>
-      <div>${when}</div>
-    </div>
-    <div class="text">${esc(m.text.substring(0, 80))}${
-    m.text.length > 80 ? "…" : ""
-  }</div>
-    <div class="row" style="margin-top:10px; justify-content:flex-end">
-      <button class="btn small ghost danger" aria-label="Delete" data-id="${m.id}">Delete</button>
-    </div>
-  `;
+      el.innerHTML = `
+        <div class="meta">
+          <div>From: <strong>${who}</strong></div>
+          <div>${when}</div>
+        </div>
+        <div class="text">${esc(m.text.substring(0,80))}${m.text.length > 80 ? "…" : ""}</div>
+        <div class="row" style="margin-top:10px;justify-content:flex-end">
+          <button class="btn small ghost danger" data-id="${d.id}">Delete</button>
+        </div>
+      `;
+      list.appendChild(el);
+    });
 
-  list.appendChild(el);
-});
-
-// 💬 Pop-up modal for messages
-const modal = document.getElementById("messageModal");
-const modalTitle = document.getElementById("modalTitle");
-const modalBody = document.getElementById("modalBody");
-const modalTime = document.getElementById("modalTime");
-const closeModal = document.getElementById("closeModal");
-
-document.querySelectorAll(".message.clickable").forEach((card) => {
-  card.addEventListener("click", (e) => {
-    // prevent button clicks (like Delete) from triggering popup
-    if (e.target.tagName === "BUTTON") return;
-
-    const text = card.dataset.text;
-    const alias = card.dataset.alias;
-    const time = card.dataset.time;
-
-    modalTitle.textContent = `Message from ${alias}`;
-    modalBody.textContent = text;
-    modalTime.textContent = time;
-
-    modal.style.display = "flex";
-  });
-});
-
-closeModal?.addEventListener("click", () => {
-  modal.style.display = "none";
-});
-
-window.addEventListener("click", (e) => {
-  if (e.target === modal) modal.style.display = "none";
-});
-
-  // attach delete handlers
-  $$('#messagesList [data-id]').forEach(btn=>{
-    btn.addEventListener('click', async (e)=>{
-      const messageId = e.currentTarget.getAttribute('data-id');
-      try {
-        await DB.delMessage(profileId, messageId); // ✅ use profileId
-        toast('Message deleted');
-        await renderInbox(hashId); // reload same inbox
-      } catch(err) {
-        console.error(err);
-        toast('Could not delete (check owner & permissions)');
+    // 🔔 Notify on new messages
+    if (!initialLoad && snapshot.docChanges().some(c => c.type === "added")) {
+      const notifEnabled = localStorage.getItem("encrypt_notif_enabled") === "true";
+      if (notifEnabled) {
+        const audio = new Audio("notify.mp3");
+        audio.volume = 0.6;
+        if (Notification.permission === "granted") {
+          new Notification("New message received on Encrypt 💬", {
+            body: "Someone sent you a new anonymous message.",
+            icon: "icon.png"
+          });
+        }
+        audio.play().catch(() => console.log("Sound blocked (needs user action first)."));
       }
+    }
+
+    initialLoad = false;
+
+    // Modal (popup)
+    const modal = $("#messageModal");
+    const modalTitle = $("#modalTitle");
+    const modalBody = $("#modalBody");
+    const modalTime = $("#modalTime");
+    const closeModal = $("#closeModal");
+
+    document.querySelectorAll(".message.clickable").forEach((card) => {
+      card.addEventListener("click", (e) => {
+        if (e.target.tagName === "BUTTON") return;
+        const text = card.dataset.text;
+        const alias = card.dataset.alias;
+        const time = card.dataset.time;
+        modalTitle.textContent = `Message from ${alias}`;
+        modalBody.textContent = text;
+        modalTime.textContent = time;
+        modal.style.display = "flex";
+      });
+    });
+
+    closeModal?.addEventListener("click", () => {
+      modal.style.display = "none";
+    });
+    window.addEventListener("click", (e) => {
+      if (e.target === modal) modal.style.display = "none";
+    });
+
+    // Delete button
+    $$('#messagesList [data-id]').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        const messageId = e.currentTarget.getAttribute('data-id');
+        try {
+          await DB.delMessage(profileId, messageId);
+          toast('Message deleted');
+        } catch (err) {
+          console.error(err);
+          toast('Could not delete (check owner)');
+        }
+      });
     });
   });
 }
@@ -932,6 +939,15 @@ async function renderProfilePage() {
 
   container.innerHTML = `
     <div style="max-width:420px;margin:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <h2 style="margin:0;">My Profile</h2>
+    <label class="ios-switch">
+    <input type="checkbox" id="notifToggle">
+    <span class="slider"></span>
+    </label>
+    </div>
+    <p id="notifLabel" class="muted" style="text-align:right;margin-top:-6px;font-size:13px;">Notifications Off</p>
+    <hr>
       <p><strong>First Name:</strong> ${esc(data.firstName || "-")}</p>
       <p><strong>Last Name:</strong> ${esc(data.lastName || "-")}</p>
       <p><strong>Email:</strong> ${esc(user.email)}</p>
@@ -967,6 +983,33 @@ async function renderProfilePage() {
 </div>
     </div>
   `;
+
+// 🔔 Notification Toggle
+const notifToggle = $('#notifToggle');
+const notifLabel = $('#notifLabel');
+
+// Restore saved preference
+const notifState = localStorage.getItem("encrypt_notif_enabled") === "true";
+notifToggle.checked = notifState;
+notifLabel.textContent = notifState ? "Notifications On" : "Notifications Off";
+
+// Ask permission if not granted yet
+if (notifState && Notification.permission !== "granted") {
+  Notification.requestPermission();
+}
+
+// Toggle handler
+notifToggle.addEventListener("change", async (e) => {
+  const enabled = e.target.checked;
+  notifLabel.textContent = enabled ? "Notifications On" : "Notifications Off";
+  localStorage.setItem("encrypt_notif_enabled", enabled);
+
+  if (enabled && Notification.permission !== "granted") {
+    await Notification.requestPermission();
+  }
+
+  toast(enabled ? "Notifications enabled ✅" : "Notifications turned off");
+});
 
   // Password toggle buttons
   const newPwInput = $('#newPw');
