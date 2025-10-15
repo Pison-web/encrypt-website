@@ -357,14 +357,14 @@ const send  = `${location.origin}${location.pathname}#/send/${profileId}`;
       </div>`;
     live.querySelector('.copyInbox')?.addEventListener('click', ()=>navigator.clipboard.writeText(inbox).then(()=>toast('Inbox link copied')));
     live.querySelector('.copyPublic')?.addEventListener('click', ()=>{
-  const message = `💬 Send me an anonymous message via Encrypt: ${send}`;
+  const message = `💬 Send me an anonymous message via Encrypts: ${send}`;
   navigator.clipboard.writeText(message).then(()=>{
     toast('Public link (with message) copied!');
   });
 });
   }
 
-  toast('Your Encrypt links are ready');
+  toast('Your Encrypts links are ready');
   const kpi = $('#kpiMessages'); if(kpi) kpi.textContent = String(await DB.countAll());
 });
 
@@ -848,7 +848,7 @@ async function initAccountPage() {
 /* Copy buttons — with preset message */
 $('#copyPublic')?.addEventListener('click', ()=>{
   const link = $('#publicLink')?.value;
-  const message = `💬 Send me an anonymous message via Encrypt: ${link}`;
+  const message = `💬 Send me an anonymous message via Encrypts: ${link}`;
   navigator.clipboard.writeText(message).then(()=>{
     toast('Public link (with message) copied!');
   });
@@ -856,7 +856,7 @@ $('#copyPublic')?.addEventListener('click', ()=>{
 
 $('#btnSharePublic')?.addEventListener('click', ()=>{
   const link = $('#publicLink')?.value;
-  const message = `💬 Send me an anonymous message via Encrypt: ${link}`;
+  const message = `💬 Send me an anonymous message via Encrypts: ${link}`;
   navigator.clipboard.writeText(message).then(()=>{
     toast('Public link (with message) copied!');
   });
@@ -864,7 +864,7 @@ $('#btnSharePublic')?.addEventListener('click', ()=>{
 
 $('#copySend')?.addEventListener('click', ()=>{
   const link = $('#sendLink')?.value;
-  const message = `💌 Send me an anonymous message via Encrypt: ${link}`;
+  const message = `💌 Send me an anonymous message via Encrypts: ${link}`;
   navigator.clipboard.writeText(message).then(()=>{
     toast('Send link (with message) copied!');
   });
@@ -935,7 +935,7 @@ async function renderProfilePage() {
       <p><strong>First Name:</strong> ${esc(data.firstName || "-")}</p>
       <p><strong>Last Name:</strong> ${esc(data.lastName || "-")}</p>
       <p><strong>Email:</strong> ${esc(user.email)}</p>
-      <h5><p class="muted">You joined Encrypt on ${joined}</p></h5>
+      <h5><p class="muted">You joined Encrypts on ${joined}</p></h5>
       <hr>
 
       <button class="btn" id="changePwBtn">Change Password</button>
