@@ -940,6 +940,7 @@ async function renderProfilePage() {
   container.innerHTML = `
     <div style="max-width:420px;margin:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <h2 style="margin:0;">My Profile</h2>
     <label class="ios-switch">
     <input type="checkbox" id="notifToggle">
     <span class="slider"></span>
