@@ -24,6 +24,13 @@ import {
 
 import { sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
 
+import {
+  getMessaging,
+  getToken,
+  onMessage
+} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-messaging.js";
+
+
 
 /* ----------------------------
    Firebase config (your project)
@@ -38,10 +45,17 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-
+// Register the service worker for FCM
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker
+    .register('/firebase-messaging-sw.js')
+    .then((reg) => console.log('Service Worker registered for FCM ✅', reg))
+    .catch((err) => console.error('Service Worker registration failed:', err));
+}
 
 /* ----------------------------
    LIGHT THEME AS DEFAULT (5TH OCT, 2025-11:27pm)
@@ -1004,11 +1018,37 @@ notifToggle.addEventListener("change", async (e) => {
   notifLabel.textContent = enabled ? "Notifications On" : "Notifications Off";
   localStorage.setItem("encrypt_notif_enabled", enabled);
 
-  if (enabled && Notification.permission !== "granted") {
-    await Notification.requestPermission();
-  }
+  if (enabled) {
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      toast("Notifications blocked in browser settings.");
+      notifToggle.checked = false;
+      localStorage.setItem("encrypt_notif_enabled", false);
+      return;
+    }
 
-  toast(enabled ? "Notifications enabled ✅" : "Notifications turned off");
+    // 🔥 Get FCM Token
+    try {
+      const token = await getToken(messaging, {
+        vapidKey: "BMgPm7N9gvzzpWBav6ZdAfcHJN78FpphKnvgaqX7vgp_SDytgENA59fzlTJwdo9ns2Otn3bl4iW41SJk-YnVgIM"
+      });
+      console.log("FCM Token:", token);
+
+      if (auth.currentUser) {
+        await setDoc(
+          doc(db, "users", auth.currentUser.uid),
+          { fcmToken: token },
+          { merge: true }
+        );
+      }
+      toast("🔔 Push notifications enabled!");
+    } catch (err) {
+      console.error("FCM setup failed:", err);
+      toast("Notification setup failed");
+    }
+  } else {
+    toast("Notifications turned off");
+  }
 });
 
   // Password toggle buttons
@@ -1102,6 +1142,22 @@ $('#confirmDelBtn')?.addEventListener('click', async () => {
   }
 });
 }
+
+// Handle foreground push notifications (while user is on site)
+onMessage(messaging, (payload) => {
+  console.log("Message received:", payload);
+  const audio = new Audio("notify.mp3");
+  audio.volume = 0.6;
+  audio.play().catch(() => console.warn("Sound autoplay blocked"));
+
+  if (Notification.permission === "granted") {
+    const { title, body } = payload.notification || {};
+    new Notification(title || "New Encrypt Message 💬", {
+      body: body || "You’ve received a new anonymous message.",
+      icon: "icon.png",
+    });
+  }
+});
 
 /* Boot: wait for auth to be initialized, then route */
 authReady.then(()=>{ route(); });
