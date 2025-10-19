@@ -51,7 +51,7 @@ const auth = getAuth(app);
 
 // Register the service worker for FCM
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('firebase-messaging-sw.js')
+  navigator.serviceWorker.register('/encrypt-website/firebase-messaging-sw.js')
     .then((reg) => console.log('Service Worker registered for FCM ✅', reg))
     .catch((err) => console.error('Service Worker registration failed:', err));
 }
