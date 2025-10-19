@@ -185,6 +185,11 @@ body.light-theme .footer-link:hover {
    </footer>
 </div>
 <script>
+  // Auto-update copyright year
+  document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+
+<script>
     /* ----------------------------
    LIGHT THEME AS DEFAULT (5TH OCT, 2025-11:27pm)
    ---------------------------- */
@@ -215,8 +220,6 @@ document.body.classList.add('light-theme');
       }
     })();
 
-    // Auto-update copyright year
-  document.getElementById("year").textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
