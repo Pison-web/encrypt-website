@@ -333,7 +333,6 @@ window.addEventListener('hashchange', route);
 $('#createLink')?.addEventListener('click', async ()=>{
   if (!auth.currentUser) return toast('Please log in first!');
   if (!auth.currentUser.emailVerified) return toast('Verify your email before creating an inbox.');
-  live.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
 
   const name = $('#displayName')?.value.trim();
@@ -455,29 +454,68 @@ async function renderInbox(hashId){
     $('#emptyInbox').style.display = 'none';
     list.innerHTML = '';
 
-    snapshot.docs.forEach((d) => {
-      const m = d.data();
-      const when = m.at?.toDate ? m.at.toDate().toLocaleString() : "Just now";
-      const who = m.alias || "Anonymous";
+    // Collect all messages first
+let allMessages = snapshot.docs.map((d) => {
+  const m = d.data();
+  const when = m.at?.toDate ? m.at.toDate().toLocaleString() : "Just now";
+  const who = m.alias || "Anonymous";
+  return {
+    id: d.id,
+    text: m.text,
+    alias: who,
+    time: when
+  };
+});
 
-      const el = document.createElement("div");
-      el.className = "message clickable";
-      el.dataset.text = m.text;
-      el.dataset.alias = who;
-      el.dataset.time = when;
+// Function to render messages (filtered)
+function renderMessages(filter = "") {
+  list.innerHTML = "";
+  const q = filter.toLowerCase();
 
-      el.innerHTML = `
-        <div class="meta">
-          <div>From: <strong>${who}</strong></div>
-          <div>${when}</div>
-        </div>
-        <div class="text">${esc(m.text.substring(0,80))}${m.text.length > 80 ? "…" : ""}</div>
-        <div class="row" style="margin-top:10px;justify-content:flex-end">
-          <button class="btn small ghost danger" data-id="${d.id}">Delete</button>
-        </div>
-      `;
-      list.appendChild(el);
-    });
+  const filtered = allMessages.filter(
+    (m) =>
+      m.text.toLowerCase().includes(q) ||
+      m.alias.toLowerCase().includes(q) ||
+      m.time.toLowerCase().includes(q)
+  );
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<p class="muted" style="text-align:center;">No messages match your search.</p>`;
+    return;
+  }
+
+  filtered.forEach((m) => {
+    const el = document.createElement("div");
+    el.className = "message clickable";
+    el.dataset.text = m.text;
+    el.dataset.alias = m.alias;
+    el.dataset.time = m.time;
+
+    el.innerHTML = `
+      <div class="meta">
+        <div>From: <strong>${m.alias}</strong></div>
+        <div>${m.time}</div>
+      </div>
+      <div class="text">${esc(m.text.substring(0,80))}${m.text.length > 80 ? "…" : ""}</div>
+      <div class="row" style="margin-top:10px;justify-content:flex-end">
+        <button class="btn small ghost danger" data-id="${m.id}">Delete</button>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+}
+
+// Render initial messages
+renderMessages();
+
+// ✅ Add search filter listener
+const searchInput = document.getElementById("searchMessages");
+if (searchInput) {
+  searchInput.addEventListener("input", (e) => {
+    const val = e.target.value.trim();
+    renderMessages(val);
+  });
+}
 
     // 🔔 Notify on new messages
     if (!initialLoad && snapshot.docChanges().some(c => c.type === "added")) {
@@ -1166,5 +1204,8 @@ onMessage(messaging, (payload) => {
   }
 });
 
+// Auto-update copyright year
+  document.getElementById("year").textContent = new Date().getFullYear();
+  
 /* Boot: wait for auth to be initialized, then route */
 authReady.then(()=>{ route(); });

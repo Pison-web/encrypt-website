@@ -547,3 +547,67 @@ body.light-theme .footer-link:hover {
 .ios-switch input:checked + .slider:before {
   transform: translateX(22px);
 }
+
+/* 🔍 Stylish Search Bar (iOS-like) */
+.search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 8px 12px;
+  width: 100%;
+  max-width: 320px;
+  margin: 10px 0;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.search-bar:focus-within {
+  background: rgba(255,255,255,0.15);
+  box-shadow: 0 0 6px rgba(255,255,255,0.2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--muted);
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 8px 8px 34px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  color: white;
+  font-family: inherit;
+}
+
+.search-input::placeholder {
+  color: rgba(255,255,255,0.5);
+}
+
+/* 🌞 Light theme support */
+body.light-theme .search-bar {
+  background: rgba(0,0,0,0.07);
+}
+
+body.light-theme .search-bar:focus-within {
+  background: rgba(0,0,0,0.12);
+  box-shadow: 0 0 6px rgba(0,0,0,0.1);
+}
+
+body.light-theme .search-icon {
+  color: rgba(0,0,0,0.6);
+}
+
+body.light-theme .search-input {
+  color: #222;
+}
+
+body.light-theme .search-input::placeholder {
+  color: rgba(0,0,0,0.4);
+}
