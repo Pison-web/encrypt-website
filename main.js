@@ -368,6 +368,8 @@ const send  = `${location.origin}${location.pathname}#/send/${profileId}`;
           <a class="btn" href="${send}">Open Public Page</a>
         </div>
       </div>`;
+        // Auto-scroll-live preview section
+    live.scrollIntoView({ behavior: 'smooth', block: 'start' });  
     live.querySelector('.copyInbox')?.addEventListener('click', ()=>navigator.clipboard.writeText(inbox).then(()=>toast('Inbox link copied')));
     live.querySelector('.copyPublic')?.addEventListener('click', ()=>{
   const message = `💬 Send me an anonymous message via Encrypts: ${send}`;
