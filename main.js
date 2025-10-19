@@ -1206,6 +1206,9 @@ onMessage(messaging, (payload) => {
 
 // Auto-update copyright year
   document.getElementById("year").textContent = new Date().getFullYear();
-  
+  // Hide notification toggle 
+  document.querySelector('.notification-toggle')?.style.display = 'none';
+
+
 /* Boot: wait for auth to be initialized, then route */
 authReady.then(()=>{ route(); });
