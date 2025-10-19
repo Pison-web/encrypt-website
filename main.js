@@ -333,6 +333,8 @@ window.addEventListener('hashchange', route);
 $('#createLink')?.addEventListener('click', async ()=>{
   if (!auth.currentUser) return toast('Please log in first!');
   if (!auth.currentUser.emailVerified) return toast('Verify your email before creating an inbox.');
+  live.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
 
   const name = $('#displayName')?.value.trim();
   const profileId = uid();    // public id
