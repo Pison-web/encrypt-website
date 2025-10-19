@@ -6,7 +6,7 @@ firebase.initializeApp({
   apiKey: "AIzaSyBNp0PBVgtczW5HXK7MbfivIPSgk6w5LqE",
   authDomain: "encrypt-website-b1067.firebaseapp.com",
   projectId: "encrypt-website-b1067",
-  storageBucket: "encrypt-website-b1067.firebasestorage.app",
+  storageBucket: "encrypt-website-b1067.appspot.com",
   messagingSenderId: "1035092157297",
   appId: "1:1035092157297:web:ff2b186b957ded99ba0cd0"
 });
