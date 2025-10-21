@@ -496,6 +496,16 @@ body.light-theme .footer-link:hover {
   to { opacity: 1; }
 }
 
+.modal-content {
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+}
+
+.modal-content.glow {
+  box-shadow: 0 0 25px currentColor, 0 0 50px currentColor;
+  transition: box-shadow 0.3s ease;
+}
+
 /* ===== THEME FIXES FOR MODAL POPUP ===== */
 
 /* Dark mode (default) */
@@ -511,7 +521,7 @@ body:not(.light-theme) .modal-content {
 
 body:not(.light-theme) .modal-content .muted,
 body:not(.light-theme) #modalTime {
-  color: #ccc; /* lighter gray for time/date visibility */
+  color: rgba(255,255,255,0.8);
 }
 
 /* Light mode */
@@ -527,8 +537,10 @@ body.light-theme .modal-content {
 
 body.light-theme .modal-content .muted,
 body.light-theme #modalTime {
-  color: #555;
+  color: rgba(252, 252, 252, 0.7);  /* slightly muted black */
+  font-weight: 500;
 }
+
 .modal-content {
   backdrop-filter: blur(16px) saturate(1.2);
   -webkit-backdrop-filter: blur(16px) saturate(1.2);

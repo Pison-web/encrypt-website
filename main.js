@@ -525,6 +525,7 @@ if (searchInput) {
     const modalBody = $("#modalBody");
     const modalTime = $("#modalTime");
     const closeModal = $("#closeModal");
+    const modalContent = modal.querySelector(".modal-content");
 
     document.querySelectorAll(".message.clickable").forEach((card) => {
       card.addEventListener("click", (e) => {
@@ -532,25 +533,26 @@ if (searchInput) {
         const text = card.dataset.text;
         const alias = card.dataset.alias;
         const time = card.dataset.time;
-        modalTitle.textContent = `Message from ${alias}`;
+        modalTitle.textContent = `Message from : ${alias}`;
         modalBody.textContent = text;
         modalTime.textContent = time;
         modal.style.display = "flex";
-        // 🎨 Random background color each time a message opens
-const colors = [
-  "#1e3a8a", // dark blue
-  "#9333ea", // purple
-  "#dc2626", // red
-  "#16a34a", // green
-  "#0284c7", // sky blue
-  "#ca8a04", // gold
-  "#f97316", // orange
-  "#6366f1"  // indigo
-];
+// 🎨 Random color generator with auto-contrast
+function randomColor() {
+  const r = Math.floor(Math.random() * 200);
+  const g = Math.floor(Math.random() * 200);
+  const b = Math.floor(Math.random() * 200);
+  return { color: `rgb(${r}, ${g}, ${b})`, brightness: (r*0.299 + g*0.587 + b*0.114) };
+}
 
-const randomColor = colors[Math.floor(Math.random() * colors.length)];
-modal.querySelector(".modal-content").style.background = randomColor;
-modal.querySelector(".modal-content").style.color = "#fff";
+const { color, brightness } = randomColor();
+modalContent.style.transition = "background 0.5s ease-in-out, color 0.5s ease-in-out";
+modalContent.style.background = color;
+modalContent.style.color = brightness > 140 ? "#000" : "#fff";
+
+// ✨ Glow effect
+modalContent.classList.add("glow");
+setTimeout(() => modalContent.classList.remove("glow"), 800);
 
       });
     });
@@ -561,6 +563,7 @@ modal.querySelector(".modal-content").style.color = "#fff";
     window.addEventListener("click", (e) => {
       if (e.target === modal) modal.style.display = "none";
     });
+
 
     // Delete button
     $$('#messagesList [data-id]').forEach((btn) => {
