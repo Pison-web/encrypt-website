@@ -496,7 +496,44 @@ body.light-theme .footer-link:hover {
   to { opacity: 1; }
 }
 
+/* ===== THEME FIXES FOR MODAL POPUP ===== */
 
+/* Dark mode (default) */
+body:not(.light-theme) .modal-overlay {
+  backdrop-filter: blur(12px) brightness(0.5);
+  background: rgba(0, 0, 0, 0.6);
+}
+
+body:not(.light-theme) .modal-content {
+  background: rgba(20, 20, 20, 0.9);
+  color: #f5f5f5;
+}
+
+body:not(.light-theme) .modal-content .muted,
+body:not(.light-theme) #modalTime {
+  color: #ccc; /* lighter gray for time/date visibility */
+}
+
+/* Light mode */
+body.light-theme .modal-overlay {
+  backdrop-filter: blur(10px) brightness(1);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+body.light-theme .modal-content {
+  background: rgba(255, 255, 255, 0.9);
+  color: #000;
+}
+
+body.light-theme .modal-content .muted,
+body.light-theme #modalTime {
+  color: #555;
+}
+.modal-content {
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid rgba(255,255,255,0.15);
+}
 
 
 /* 🔍 Stylish Search Bar (iOS-like) */
