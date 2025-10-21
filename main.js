@@ -37,7 +37,6 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
@@ -1110,23 +1109,6 @@ $('#confirmDelBtn')?.addEventListener('click', async () => {
   }
 });
 }
-
-// Handle foreground push notifications (while user is on site)
-onMessage(messaging, (payload) => {
-  console.log("Message received:", payload);
-  const audio = new Audio("notify.mp3");
-  audio.volume = 0.6;
-  audio.play().catch(() => console.warn("Sound autoplay blocked"));
-
-  if (Notification.permission === "granted") {
-    const { title, body } = payload.notification || {};
-    new Notification(title || "New Encrypt Message 💬", {
-      body: body || "You’ve received a new anonymous message.",
-      icon: "icon.png",
-    });
-  }
-});
   
-
 /* Boot: wait for auth to be initialized, then route */
 authReady.then(()=>{ route(); });
