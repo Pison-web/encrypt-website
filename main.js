@@ -536,6 +536,22 @@ if (searchInput) {
         modalBody.textContent = text;
         modalTime.textContent = time;
         modal.style.display = "flex";
+        // 🎨 Random background color each time a message opens
+const colors = [
+  "#1e3a8a", // dark blue
+  "#9333ea", // purple
+  "#dc2626", // red
+  "#16a34a", // green
+  "#0284c7", // sky blue
+  "#ca8a04", // gold
+  "#f97316", // orange
+  "#6366f1"  // indigo
+];
+
+const randomColor = colors[Math.floor(Math.random() * colors.length)];
+modal.querySelector(".modal-content").style.background = randomColor;
+modal.querySelector(".modal-content").style.color = "#fff";
+
       });
     });
 
