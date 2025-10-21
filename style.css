@@ -612,7 +612,3 @@ body.light-theme .search-input::placeholder {
   color: rgba(0,0,0,0.4);
 }
 
-/* Temporarily hide the notification toggle */
-.notification-toggle {
-  display: none !important;
-}
