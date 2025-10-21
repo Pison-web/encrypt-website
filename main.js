@@ -21,15 +21,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
 
 
-
 import { sendEmailVerification } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-
-import {
-  getMessaging,
-  getToken,
-  onMessage
-} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-messaging.js";
-
 
 
 /* ----------------------------
@@ -48,13 +40,6 @@ const app = initializeApp(firebaseConfig);
 const messaging = getMessaging(app);
 const db = getFirestore(app);
 const auth = getAuth(app);
-
-// Register the service worker for FCM
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/encrypt-website/firebase-messaging-sw.js')
-    .then((reg) => console.log('Service Worker registered for FCM ✅', reg))
-    .catch((err) => console.error('Service Worker registration failed:', err));
-}
 
 /* ----------------------------
    LIGHT THEME AS DEFAULT (5TH OCT, 2025-11:27pm)
@@ -997,16 +982,7 @@ async function renderProfilePage() {
   : "Unknown";
 
   container.innerHTML = `
-    <div style="max-width:420px;margin:auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <h3 style="margin:0;">My Profile</h3>
-    <label class="ios-switch">
-    <input type="checkbox" id="notifToggle">
-    <span class="slider"></span>
-    </label>
-    </div>
-    <p id="notifLabel" class="muted" style="text-align:right;margin-top:-6px;font-size:13px;">Notifications Off</p>
-    <hr>
+      <hr>
       <p><strong>First Name:</strong> ${esc(data.firstName || "-")}</p>
       <p><strong>Last Name:</strong> ${esc(data.lastName || "-")}</p>
       <p><strong>Email:</strong> ${esc(user.email)}</p>
@@ -1042,59 +1018,6 @@ async function renderProfilePage() {
 </div>
     </div>
   `;
-
-// 🔔 Notification Toggle
-const notifToggle = $('#notifToggle');
-const notifLabel = $('#notifLabel');
-
-// Restore saved preference
-const notifState = localStorage.getItem("encrypt_notif_enabled") === "true";
-notifToggle.checked = notifState;
-notifLabel.textContent = notifState ? "Notifications On" : "Notifications Off";
-
-// Ask permission if not granted yet
-if (notifState && Notification.permission !== "granted") {
-  Notification.requestPermission();
-}
-
-// Toggle handler
-notifToggle.addEventListener("change", async (e) => {
-  const enabled = e.target.checked;
-  notifLabel.textContent = enabled ? "Notifications On" : "Notifications Off";
-  localStorage.setItem("encrypt_notif_enabled", enabled);
-
-  if (enabled) {
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") {
-      toast("Notifications blocked in browser settings.");
-      notifToggle.checked = false;
-      localStorage.setItem("encrypt_notif_enabled", false);
-      return;
-    }
-
-    // 🔥 Get FCM Token
-    try {
-      const token = await getToken(messaging, {
-        vapidKey: "BMgPm7N9gvzzpWBav6ZdAfcHJN78FpphKnvgaqX7vgp_SDytgENA59fzlTJwdo9ns2Otn3bl4iW41SJk-YnVgIM"
-      });
-      console.log("FCM Token:", token);
-
-      if (auth.currentUser) {
-        await setDoc(
-          doc(db, "users", auth.currentUser.uid),
-          { fcmToken: token },
-          { merge: true }
-        );
-      }
-      toast("🔔 Push notifications enabled!");
-    } catch (err) {
-      console.error("FCM setup failed:", err);
-      toast("Notification setup failed");
-    }
-  } else {
-    toast("Notifications turned off");
-  }
-});
 
   // Password toggle buttons
   const newPwInput = $('#newPw');
