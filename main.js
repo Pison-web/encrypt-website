@@ -441,7 +441,16 @@ async function renderInbox(hashId){
     // Collect all messages first
 let allMessages = snapshot.docs.map((d) => {
   const m = d.data();
-  const when = m.at?.toDate ? m.at.toDate().toLocaleString() : "Just now";
+  const when = m.at?.toDate
+  ? m.at.toDate().toLocaleString("en-GB", {
+      weekday: "short",   // "Mon", "Tue", etc.
+      day: "2-digit",     // "22"
+      month: "long",      // "October"
+      hour: "2-digit",    // "03"
+      minute: "2-digit",  // "45"
+      hour12: true        // 12-hour format (AM/PM)
+    }).replace(",", "•") // makes it like "Wed — 22 October, 3:45 PM"
+  : "Just now";
   const who = m.alias || "Anonymous";
   return {
     id: d.id,
@@ -556,7 +565,7 @@ setTimeout(() => modalContent.classList.remove("glow"), 800);
 
       });
     });
-    
+
     // Close modal on (X) button click
 closeModal?.addEventListener("click", () => {
   modal.style.display = "none";
