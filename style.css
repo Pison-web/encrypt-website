@@ -449,7 +449,7 @@ body.light-theme .footer-link:hover {
   left: 0;
   width: 100%;
   height: 100%;
-  backdrop-filter: blur(10px) brightness(0.6);
+  backdrop-filter: blur(10px) brightness(1);
   background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
@@ -501,16 +501,12 @@ body.light-theme .footer-link:hover {
   box-shadow: 0 0 20px rgba(0,0,0,0.4);
 }
 
-.modal-content.glow {
-  box-shadow: 0 0 25px currentColor, 0 0 50px currentColor;
-  transition: box-shadow 0.3s ease;
-}
 
 /* ===== THEME FIXES FOR MODAL POPUP ===== */
 
 /* Dark mode (default) */
 body:not(.light-theme) .modal-overlay {
-  backdrop-filter: blur(12px) brightness(0.5);
+  backdrop-filter: blur(5px) brightness(1.0);
   background: rgba(0, 0, 0, 0.6);
 }
 
@@ -526,7 +522,7 @@ body:not(.light-theme) #modalTime {
 
 /* Light mode */
 body.light-theme .modal-overlay {
-  backdrop-filter: blur(10px) brightness(1);
+  backdrop-filter: blur(5px) brightness(1);
   background: rgba(255, 255, 255, 0.2);
 }
 
