@@ -556,14 +556,23 @@ setTimeout(() => modalContent.classList.remove("glow"), 800);
 
       });
     });
+    
+    // Close modal on (X) button click
+closeModal?.addEventListener("click", () => {
+  modal.style.display = "none";
+});
 
-    closeModal?.addEventListener("click", () => {
+// ✅ Improved modal close for iOS + all platforms
+["click", "touchstart", "touchend", "pointerup"].forEach(evt => {
+  modal.addEventListener(evt, (e) => {
+    // Only close if the user tapped outside the modal content
+    if (e.target === modal) {
+      e.preventDefault();
+      e.stopPropagation();
       modal.style.display = "none";
-    });
-    window.addEventListener("click", (e) => {
-      if (e.target === modal) modal.style.display = "none";
-    });
-
+    }
+  }, { passive: false });
+});
 
     // Delete button
     $$('#messagesList [data-id]').forEach((btn) => {
