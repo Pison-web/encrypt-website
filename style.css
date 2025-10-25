@@ -509,6 +509,11 @@ body.light-theme .footer-link:hover {
   line-height: 1.5;
 }
 
+/* Make inbox message previews bold */
+#messagesList .message .text {
+  font-weight: 600;
+}
+
 
 /* ===== THEME FIXES FOR MODAL POPUP ===== */
 
