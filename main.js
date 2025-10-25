@@ -543,9 +543,10 @@ if (searchInput) {
         const alias = card.dataset.alias;
         const time = card.dataset.time;
         modalTitle.textContent = `Message from : ${alias}`;
-        modalBody.textContent = text;
+        modalBody.innerHTML = `<strong>${esc(text)}</strong>`;
         modalTime.textContent = time;
         modal.style.display = "flex";
+
 // 🎨 Random color generator with auto-contrast
 function randomColor() {
   const r = Math.floor(Math.random() * 200);

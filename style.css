@@ -503,6 +503,12 @@ body.light-theme .footer-link:hover {
   box-shadow: 0 0 20px rgba(0,0,0,0.4);
 }
 
+#modalBody {
+  font-weight: 600;
+  font-size: 1.05em;
+  line-height: 1.5;
+}
+
 
 /* ===== THEME FIXES FOR MODAL POPUP ===== */
 
@@ -609,4 +615,3 @@ body.light-theme .search-input {
 body.light-theme .search-input::placeholder {
   color: rgba(0,0,0,0.4);
 }
-
