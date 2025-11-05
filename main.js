@@ -31,7 +31,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBNp0PBVgtczW5HXK7MbfivIPSgk6w5LqE",
   authDomain: "encrypt-website-b1067.firebaseapp.com",
   projectId: "encrypt-website-b1067",
-  storageBucket: "encrypt-website-b1067.firebasestorage.app",
+  storageBucket: "encrypt-website-b1067.appspot.com",
   messagingSenderId: "1035092157297",
   appId: "1:1035092157297:web:ff2b186b957ded99ba0cd0"
 };
@@ -61,6 +61,12 @@ const toast = (msg) => {
 const uid = () => crypto.getRandomValues(new Uint8Array(12)).reduce((a,b)=>a+('0'+b.toString(16)).slice(-2),'');
 const nowISO = () => new Date().toISOString();
 const esc = (str='') => String(str).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+// Generate initials (e.g., "Pison Lawd Saaboane" → "PS")
+function getInitials(fullName = "") {
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0][0]?.toUpperCase() || "?";
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
 /* ----------------------------
    Auth persistence + initial auth ready promise
@@ -988,14 +994,11 @@ $('#logoutBtn')?.addEventListener('click', async ()=>{
 });
 
 // =======================================
-// PROFILE PAGE — VIEW / UPDATE / DELETE
+// PROFILE PAGE — VIEW / UPDATE / DELETE (NO PHOTO UPLOAD)
 // =======================================
 async function renderProfilePage() {
   const container = $('#profileContainer');
-  if (!container) {
-    console.error("Profile container not found in HTML");
-    return;
-  }
+  if (!container) return;
 
   if (!auth.currentUser) {
     container.innerHTML = `<p>Please log in to view your profile.</p>`;
@@ -1003,150 +1006,113 @@ async function renderProfilePage() {
   }
 
   const user = auth.currentUser;
-
-  // Fetch user data
   const snap = await getDoc(doc(db, "users", user.uid));
   const data = snap.exists() ? snap.data() : {};
+
+  const first = data.firstName || "";
+  const last = data.lastName || "";
+  const initials = (first[0] || "?").toUpperCase() + (last[0] || "").toUpperCase();
+  // 🎨 Generate a consistent gradient based on initials
+function generateGradient(seed) {
+  const hash = [...seed].reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+  const hue1 = hash % 360;
+  const hue2 = (hash * 1.5) % 360;
+  return `linear-gradient(135deg, hsl(${hue1}, 70%, 55%), hsl(${hue2}, 75%, 50%))`;
+}
+
   const joined = data.createdAt?.toDate
-  ? data.createdAt.toDate().toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    })
-  : "Unknown";
+    ? data.createdAt.toDate().toLocaleString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : "Unknown";
 
   container.innerHTML = `
-      <hr>
-      <p><strong>First Name:</strong> ${esc(data.firstName || "-")}</p>
-      <p><strong>Last Name:</strong> ${esc(data.lastName || "-")}</p>
+    <h2 style="margin-bottom:15px;">My Profile</h2>
+
+    <div class="profile-avatar-section">
+      <div class="avatar-circle" style="background:${generateGradient(initials)};">${esc(initials)}</div>
+    </div>
+
+    <div class="profile-info">
+      <p><strong>First Name:</strong> ${esc(first || "—")}</p>
+      <p><strong>Last Name:</strong> ${esc(last || "—")}</p>
       <p><strong>Email:</strong> ${esc(user.email)}</p>
-      <h5><p class="muted">You joined Encrypts on ${joined}</p></h5>
-      <hr>
+      <p><strong>Joined:</strong> ${joined}</p>
+    </div>
 
-      <button class="btn" id="changePwBtn">Change Password</button>
-      <div id="changePwForm" style="display:none;margin-top:10px;">
-        <div style="position:relative; margin-bottom:8px;">
-          <input class="input" id="newPw" type="password" placeholder="New Password" style="padding-right:60px;">
-          <span id="toggleNewPw" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:#999;font-size:14px;">Show</span>
-        </div>
-        <div style="position:relative;">
-          <input class="input" id="confirmPw" type="password" placeholder="Re-enter Password" style="padding-right:60px;">
-          <span id="toggleConfirmPw" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:#999;font-size:14px;">Show</span>
-        </div>
-        <button class="btn small" id="savePwBtn" style="margin-top:8px;">Save New Password</button>
-      </div>
+    <div class="profile-divider"></div>
 
-      <button class="btn ghost danger" id="deleteAccBtn" style="margin-top:14px;">Delete Account</button>
-<div id="deleteAccForm" style="display:none;margin-top:10px;">
-  <p class="muted" style="font-size:14px;">Deleting your account will erase all your data with Encrypt. Please confirm your email and password to continue.</p>
-  <input class="input" id="delEmail" type="email" placeholder="Confirm Email" style="margin-top:6px;">
-  <div class="password-wrapper" style="position:relative;margin-top:6px;">
-    <input class="input" id="delPw" type="password" placeholder="Confirm Password" style="padding-right:60px;">
-    <span id="toggleDelPw" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted-color,#999);font-size:14px;">Show</span>
-  </div>
-  <button class="btn" id="confirmDelBtn" 
-  style="margin-top:10px; background:#fff; color:#d9534f; border:1px solid #d9534f;">
-  Delete Permanently
-</button>
-  <p class="muted" id="cancelDel" style="margin-top:6px;cursor:pointer;text-decoration:underline;">Cancel</p>
-</div>
+    <div class="profile-actions">
+      <button class="btn small secondary" id="changePwBtn">Change Password</button>
+      <button class="btn small ghost danger" id="deleteAccBtn">Delete Account</button>
+    </div>
+
+    <!-- Hidden password form -->
+    <div id="changePwForm" style="display:none;margin-top:12px;">
+      <input class="input" id="newPw" type="password" placeholder="New Password" style="margin-bottom:6px;">
+      <input class="input" id="confirmPw" type="password" placeholder="Re-enter Password">
+      <button class="btn small" id="savePwBtn" style="margin-top:8px;">Save New Password</button>
+    </div>
+
+    <!-- Hidden delete form -->
+    <div id="deleteAccForm" style="display:none;margin-top:10px;">
+      <p class="muted" style="font-size:14px;">Deleting your account will erase all data.</p>
+      <input class="input" id="delEmail" type="email" placeholder="Confirm Email">
+      <input class="input" id="delPw" type="password" placeholder="Confirm Password" style="margin-top:6px;">
+      <button class="btn ghost danger" id="confirmDelBtn" style="margin-top:8px;">Delete Permanently</button>
+      <p id="cancelDel" class="muted" style="cursor:pointer;text-decoration:underline;margin-top:6px;">Cancel</p>
     </div>
   `;
 
-  // Password toggle buttons
-  const newPwInput = $('#newPw');
-  const confirmPwInput = $('#confirmPw');
-  const toggleNewPw = $('#toggleNewPw');
-  const toggleConfirmPw = $('#toggleConfirmPw');
-
-  toggleNewPw?.addEventListener('click', () => {
-    newPwInput.type = newPwInput.type === 'password' ? 'text' : 'password';
-    toggleNewPw.textContent = newPwInput.type === 'password' ? 'Show' : 'Hide';
-  });
-
-  toggleConfirmPw?.addEventListener('click', () => {
-    confirmPwInput.type = confirmPwInput.type === 'password' ? 'text' : 'password';
-    toggleConfirmPw.textContent = confirmPwInput.type === 'password' ? 'Show' : 'Hide';
-  });
-
-  // Show/Hide Change Password Form
+  // === Password and delete actions ===
   $('#changePwBtn')?.addEventListener('click', () => {
-    const form = $('#changePwForm');
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    const f = $('#changePwForm');
+    f.style.display = f.style.display === 'none' ? 'block' : 'none';
   });
 
-  // Save new password
   $('#savePwBtn')?.addEventListener('click', async () => {
     const pw1 = $('#newPw').value.trim();
     const pw2 = $('#confirmPw').value.trim();
     if (!pw1 || pw1 !== pw2) return toast("Passwords don’t match.");
-
     try {
       await updatePassword(user, pw1);
       toast("Password updated ✅");
       $('#changePwForm').style.display = 'none';
     } catch (err) {
-      console.error(err);
-      if (err.code === "auth/requires-recent-login") {
-        toast("Please log in again to change your password.");
-      } else {
-        toast("Error: " + err.message);
-      }
+      toast("Error: " + err.message);
     }
   });
 
-// delete account (inline, cleaner with email verification + reauth)
-$('#deleteAccBtn')?.addEventListener('click', () => {
-  const form = $('#deleteAccForm');
-  form.style.display = form.style.display === 'none' ? 'block' : 'none';
-});
+  $('#deleteAccBtn')?.addEventListener('click', () => {
+    const f = $('#deleteAccForm');
+    f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  });
 
-// show/hide password in delete form
-$('#toggleDelPw')?.addEventListener('click', () => {
-  const input = $('#delPw');
-  if (!input) return;
-  if (input.type === 'password') {
-    input.type = 'text';
-    $('#toggleDelPw').textContent = 'Hide';
-  } else {
-    input.type = 'password';
-    $('#toggleDelPw').textContent = 'Show';
-  }
-});
+  $('#cancelDel')?.addEventListener('click', () => $('#deleteAccForm').style.display = 'none');
 
-// cancel delete form
-$('#cancelDel')?.addEventListener('click', () => {
-  $('#deleteAccForm').style.display = 'none';
-});
+  $('#confirmDelBtn')?.addEventListener('click', async () => {
+    const email = $('#delEmail')?.value.trim();
+    const password = $('#delPw')?.value.trim();
+    if (!email || !password) return toast("Enter email & password.");
 
-// confirm delete
-$('#confirmDelBtn')?.addEventListener('click', async () => {
-  const user = auth.currentUser;
-  if (!user) return toast("No user logged in.");
-  if (!user.emailVerified) return toast("Please verify your email before deleting your account.");
-
-  const email = $('#delEmail')?.value.trim();
-  const password = $('#delPw')?.value.trim();
-  if (!email || !password) return toast("Enter your email and password to confirm.");
-
-  try {
-    const credential = EmailAuthProvider.credential(email, password);
-    await reauthenticateWithCredential(user, credential);
-
-    await deleteDoc(doc(db, "users", user.uid));
-    await deleteUser(user);
-
-    toast("Account deleted successfully.");
-    location.hash = "#/";
-  } catch (err) {
-    console.error(err);
-    toast("Deletion failed: " + err.message);
-  }
-});
+    try {
+      const credential = EmailAuthProvider.credential(email, password);
+      await reauthenticateWithCredential(user, credential);
+      await deleteDoc(doc(db, "users", user.uid));
+      await deleteUser(user);
+      toast("Account deleted.");
+      location.hash = "#/";
+    } catch (err) {
+      toast("Error: " + err.message);
+    }
+  });
 }
+
   
 /* Boot: wait for auth to be initialized, then route */
 authReady.then(()=>{ route(); });

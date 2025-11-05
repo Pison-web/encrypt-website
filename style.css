@@ -34,7 +34,7 @@
     .logo svg{filter:drop-shadow(0 4px 12px rgba(0,0,0,.25))}
     .brand h1{font-size:22px; margin:0; letter-spacing:.2px}
     .nav{display:flex; gap:12px; align-items:center}
-    .btn{appearance:none; border:0; border-radius:12px; padding:12px 16px; font-weight:600; cursor:pointer; color:#ffffff; background:#fe56f3; box-shadow:var(--shadow)}
+    .btn{appearance:none; border:0; border-radius:12px; padding:12px 16px; font-weight:600; cursor:pointer; color:#ffffff; background:#02001d; box-shadow:var(--shadow)}
     .btn.secondary{background:#1a234b; color:var(--text); border:1px solid #2a3568}
     .btn.ghost{background:transparent; color:var(--text); border:1px solid #2a3568}
     .btn.small{padding:8px 12px; border-radius:10px; font-weight:600}
@@ -79,8 +79,37 @@
       border:1px dashed #2a3568; border-radius:14px; padding:20px; text-align:center; color:var(--muted)
     }
 
-    .toast{position:fixed; right:18px; bottom:18px; background:#12ff4d; border:1px solid #2a3568; color:var(--text); padding:12px 14px; border-radius:12px; box-shadow:var(--shadow); opacity:0; transform:translateY(8px); transition:all .5s ease}
-    .toast.show{opacity:1; transform:none}
+    /* ===== iPhone-like Toast ===== */
+.toast {
+  position: fixed;
+  bottom: 80px; /* slightly above bottom for modern feel */
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(28, 28, 30, 0.85); /* iPhone dark translucent background */
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 15px;
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 2000;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+body.light-theme .toast {
+  background: rgba(245, 245, 245, 0.9);
+  color: #111;
+  box-shadow: 0 2px 15px rgba(0,0,0,0.15);
+}
+
 
     .badge{display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; border:1px solid #28408a; background:#0b163a; color:#cbd6ff; font-size:12px}
 
@@ -620,3 +649,123 @@ body.light-theme .search-input {
 body.light-theme .search-input::placeholder {
   color: rgba(0,0,0,0.4);
 }
+
+/* =====================================
+   🧍‍♂️ CLEAN FINAL PROFILE PAGE LAYOUT
+   ===================================== */
+#profileContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px;
+  text-align: left;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+#profileContainer h2 {
+  margin-bottom: 18px;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Profile Picture Circle */
+.profile-avatar-section {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 18px;
+}
+/* Profile Initials Circle (Random Gradient) */
+.avatar-circle {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 36px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+
+.avatar-initials {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  font-size: 36px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Profile info text */
+.profile-info {
+  text-align: left;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 14px 18px;
+  border-radius: 10px;
+  width: 100%;
+}
+
+.profile-info p {
+  margin: 6px 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.profile-info strong {
+  color: var(--text);
+}
+
+/* Divider line */
+.profile-divider {
+  margin: 20px 0;
+  width: 100%;
+  border: 1.5px dashed rgba(255, 255, 255, 0.25);
+}
+
+body.light-theme .profile-divider {
+  border: 1.5px dashed rgba(0, 0, 0, 0.25);
+}
+
+/* Action buttons */
+.profile-actions {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.profile-actions .btn {
+  padding: 10px 16px;
+  font-size: 14px;
+}
+
+/* Mobile Responsive Fix */
+@media (max-width: 600px) {
+  #profileContainer {
+    padding: 15px;
+  }
+
+  .avatar-circle {
+  width: 95px;
+  height: 95px;
+  font-size: 32px;
+}
+
+  .profile-info {
+    padding: 12px 14px;
+  }
+}
+
+body.light-theme .profile-divider {
+  border: 2px dashed rgba(0, 0, 0, 0.3);
+}
+
