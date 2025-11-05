@@ -813,3 +813,10 @@ body.light-theme #logoutBtn {
   color: #111;
   border: 1px solid #ccc;
 }
+
+/* share button like snapchat */
+#copySend:active {
+  transform: scale(0.96);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  transition: transform 0.15s, background 0.25s;
+}

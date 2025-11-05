@@ -988,12 +988,31 @@ $('#btnSharePublic')?.addEventListener('click', ()=>{
   });
 });
 
-$('#copySend')?.addEventListener('click', ()=>{
-  const link = $('#sendLink')?.value;
-  const message = `💌 Send me an anonymous message via Encrypts: ${link}`;
-  navigator.clipboard.writeText(message).then(()=>{
-    toast('Send link (with message) copied!');
-  });
+// 🌈 Share Public Link — Snapchat-style share menu
+$('#copySend')?.addEventListener('click', async () => {
+  const link = $('#sendLink')?.value.trim();
+  const name = $('#sendToName')?.textContent || "an Encrypts user";
+  const message = `💌 Send an anonymous message to ${name} on Encrypts!\n\n${link}`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `Send ${name} an anonymous message 💬`,
+        text: message,
+        url: link,
+      });
+      toast("Shared successfully!");
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        toast("Couldn't share. Try again!");
+        console.error("Share failed:", err);
+      }
+    }
+  } else {
+    // fallback for browsers without Web Share API
+    navigator.clipboard.writeText(message);
+    toast("Link copied to clipboard!");
+  }
 });
 
 /* KPI click handlers */
