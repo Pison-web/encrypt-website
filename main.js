@@ -80,6 +80,38 @@ const authReady = new Promise(res => { _resolveAuthReady = res; });
   try { await setPersistence(auth, browserLocalPersistence); }
   catch(e){ console.warn('setPersistence failed (non-fatal):', e); }
 })();
+/* ----------------------------
+   Auto logout after 12 hours of inactivity
+   ---------------------------- */
+const LOGOUT_TIMEOUT = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+
+function checkLastActive() {
+  const lastActive = localStorage.getItem('encrypt_last_active');
+  if (lastActive && Date.now() - parseInt(lastActive) > LOGOUT_TIMEOUT) {
+    // Too long since last visit -> auto logout
+    if (auth.currentUser) {
+      signOut(auth).then(() => {
+        localStorage.removeItem('encrypt_last_active');
+        toast("Session expired — you’ve been logged out.");
+        location.hash = "#/account"; // redirect to login
+      });
+    }
+  } else {
+    // Update timestamp
+    localStorage.setItem('encrypt_last_active', Date.now().toString());
+  }
+}
+
+// Check immediately on load
+window.addEventListener('load', checkLastActive);
+
+// Update timestamp whenever user interacts
+['click', 'mousemove', 'keypress', 'touchstart', 'scroll'].forEach(evt => {
+  window.addEventListener(evt, () => {
+    localStorage.setItem('encrypt_last_active', Date.now().toString());
+  });
+});
+
 
 // Track auth state and resolve initial promise once
 onAuthStateChanged(auth, (user) => {
@@ -651,7 +683,7 @@ async function renderMyInboxes() {
       ${p.paused ? `<p class="muted danger paused-tag">⏸ Inbox paused</p>` : ''}
       <div class="row" style="margin-top:8px">
         <a class="btn small" href="#/inbox/${p.id}-${p.secret}">Open Inbox</a>
-        <a class="btn small secondary" href="#/send/${p.id}">Public Link</a>
+        <a class="btn small secondary" href="#/send/${p.id}">Open Public</a>
       </div>
     `;
     list.appendChild(el);
