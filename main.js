@@ -83,7 +83,7 @@ const authReady = new Promise(res => { _resolveAuthReady = res; });
 /* ----------------------------
    Auto logout after 12 hours of inactivity
    ---------------------------- */
-const LOGOUT_TIMEOUT = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+const LOGOUT_TIMEOUT = 6 * 60 * 60 * 1000; // 16 hours in milliseconds
 
 function checkLastActive() {
   const lastActive = localStorage.getItem('encrypt_last_active');
