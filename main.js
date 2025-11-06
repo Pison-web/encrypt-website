@@ -83,7 +83,7 @@ const authReady = new Promise(res => { _resolveAuthReady = res; });
 /* ----------------------------
    Auto logout after 12 hours of inactivity
    ---------------------------- */
-const LOGOUT_TIMEOUT = 6 * 60 * 60 * 1000; // 16 hours in milliseconds
+const LOGOUT_TIMEOUT = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
 
 function checkLastActive() {
   const lastActive = localStorage.getItem('encrypt_last_active');
@@ -401,7 +401,7 @@ if (liveCard) {
     live.querySelector('.copyPublic')?.addEventListener('click', ()=>{
   const message = `💬 Send me an anonymous message via Encrypts: ${send}`;
   navigator.clipboard.writeText(message).then(()=>{
-    toast('Public link (with message) copied!');
+    toast('Public link copied!');
   });
 });
   }
@@ -678,8 +678,16 @@ async function renderMyInboxes() {
         </div>
       </div>
       <p class="muted" style="margin:6px 0">Created: ${
-        p.createdAt?.toDate ? p.createdAt.toDate().toLocaleString() : 'unknown'
-      }</p>
+      p.createdAt?.toDate? p.createdAt.toDate().toLocaleString("en-GB", {
+        weekday: "short",   // e.g. "Wed"
+        day: "numeric",     // e.g. "5"
+        month: "long",      // e.g. "November"
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+      }).replace(",", "").replace(" ", " ")
+    : "Unknown"
+}</p>
       ${p.paused ? `<p class="muted danger paused-tag">⏸ Inbox paused</p>` : ''}
       <div class="row" style="margin-top:8px">
         <a class="btn small" href="#/inbox/${p.id}-${p.secret}">Open Inbox</a>
@@ -689,15 +697,31 @@ async function renderMyInboxes() {
     list.appendChild(el);
   });
 
-  // Toggle menu dropdown
-  document.querySelectorAll('.menu-btn').forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      const id = e.target.dataset.id;
-      document.querySelectorAll('.menu-dropdown').forEach((m) => (m.style.display = 'none'));
-      const dropdown = document.getElementById(`menu-${id}`);
-      if (dropdown) dropdown.style.display = dropdown.style.display === 'flex' ? 'none' : 'flex';
+  // Toggle menu dropdown (click again to close)
+document.querySelectorAll('.menu-btn').forEach((btn) => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation(); // prevent other clicks
+    const id = e.target.dataset.id;
+    const dropdown = document.getElementById(`menu-${id}`);
+
+    // Close all others first
+    document.querySelectorAll('.menu-dropdown').forEach((m) => {
+      if (m !== dropdown) m.style.display = 'none';
     });
+
+    // Toggle the current one
+    if (dropdown) {
+      dropdown.style.display =
+        dropdown.style.display === 'flex' ? 'none' : 'flex';
+    }
   });
+});
+
+// 🔹 Close all menus when clicking anywhere outside
+document.addEventListener('click', () => {
+  document.querySelectorAll('.menu-dropdown').forEach((m) => (m.style.display = 'none'));
+});
+
 
   // Pause / Resume inbox toggle
   document.querySelectorAll('.menu-item.pause').forEach((btn) => {
@@ -974,9 +998,9 @@ async function initAccountPage() {
 /* Copy buttons — with preset message */
 $('#copyPublic')?.addEventListener('click', ()=>{
   const link = $('#publicLink')?.value;
-  const message = `💬 Send me an anonymous message via Encrypts: ${link}`;
+  const message = `${link}`;
   navigator.clipboard.writeText(message).then(()=>{
-    toast('Public link (with message) copied!');
+    toast('Public link copied!');
   });
 });
 
@@ -984,7 +1008,7 @@ $('#btnSharePublic')?.addEventListener('click', ()=>{
   const link = $('#publicLink')?.value;
   const message = `💬 Send me an anonymous message via Encrypts: ${link}`;
   navigator.clipboard.writeText(message).then(()=>{
-    toast('Public link (with message) copied!');
+    toast('Public link copied!');
   });
 });
 
