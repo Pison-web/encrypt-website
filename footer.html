@@ -1,0 +1,26 @@
+<footer class="site-footer">
+  <p>Built by the <strong>Encrypts</strong> Team.</p>
+  <p class="muted">Privacy. Simplicity. Freedom.</p>
+  <p class="muted">Because some messages are better unseen.</p>
+
+  <p class="muted" style="margin-top:10px; font-size:14px;">
+    © <span id="year"></span> <strong>Encrypts</strong>. All rights reserved.
+  </p>
+</footer>
+
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+
+<style>
+  .site-footer {
+    padding: 20px;
+    text-align: center;
+    color: #ddd;
+    font-family: "Poppins", sans-serif;
+  }
+
+  .muted {
+    opacity: 0.7;
+  }
+</style>

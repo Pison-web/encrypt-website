@@ -111,15 +111,20 @@
 
       <h4><a href="about.html">WHAT IS ENCRYPTS ABOUT ?</a></h4>
 
-      <footer class="site-footer">
-  <p>
-    This website was built by 
-    <a href="https://www.instagram.com/big_p_lawwd/" target="_blank" class="footer-link"><strong>Lawwd BIG P</strong></a></p>
-  <p class="muted">A proud student of <strong>The University of Arizona</strong></p>
-  <p class="muted" style="margin-top:10px; font-size:14px;">
-    © <span id="year"></span> <strong>Encrypts</strong>. All rights reserved.
-  </p>
-    </footer>
+      <div id="footer"></div>
+
+<script>
+  fetch("footer.html")
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById("footer").innerHTML = html;
+
+      // Auto-update copyright year
+      document.getElementById("year").textContent = new Date().getFullYear();
+    });
+</script>
+
+
 
     </section>
 
@@ -220,11 +225,6 @@
     <p class="muted" id="modalTime"></p>
   </div>
 </div>
-
-<script>
-  // Auto-update copyright year
-  document.getElementById("year").textContent = new Date().getFullYear();
-</script>
 
   <!-- main app script (module) -->
   <script type="module" src="main.js"></script>

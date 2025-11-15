@@ -69,47 +69,50 @@ function getInitials(fullName = "") {
 }
 
 /* ----------------------------
-   Auth persistence + initial auth ready promise
-   ---------------------------- */
-let currentUser = null;
-let _resolveAuthReady = null;
-const authReady = new Promise(res => { _resolveAuthReady = res; });
-
-// Try to set persistence (so anon UID survives reloads)
-(async ()=>{
-  try { await setPersistence(auth, browserLocalPersistence); }
-  catch(e){ console.warn('setPersistence failed (non-fatal):', e); }
-})();
-/* ----------------------------
-   Auto logout after 12 hours of inactivity
+   Auto logout after 6 hours of inactivity
    ---------------------------- */
 const LOGOUT_TIMEOUT = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
 
-function checkLastActive() {
+// Make this async so we can await signOut()
+async function checkLastActive() {
   const lastActive = localStorage.getItem('encrypt_last_active');
-  if (lastActive && Date.now() - parseInt(lastActive) > LOGOUT_TIMEOUT) {
+  if (lastActive && Date.now() - Number(lastActive) > LOGOUT_TIMEOUT) {
     // Too long since last visit -> auto logout
     if (auth.currentUser) {
-      signOut(auth).then(() => {
-        localStorage.removeItem('encrypt_last_active');
-        toast("Session expired — you’ve been logged out.");
-        location.hash = "#/account"; // redirect to login
-      });
+      try {
+        await signOut(auth);
+      } catch (err) {
+        console.warn('signOut failed during inactivity check:', err);
+        // continue to clear local state even if signOut failed
+      }
+
+      // Clean up and force a reload so the session is fully reset
+      localStorage.removeItem('encrypt_last_active');
+      toast("Session expired — you’ve been logged out.");
+
+      // Small delay so the toast can appear briefly, then force reload
+      setTimeout(() => {
+        // navigate to account view and reload to ensure auth state is cleared
+        location.hash = "#/account";
+        window.location.reload();
+      }, 300);
+
+      return;
     }
   } else {
-    // Update timestamp
+    // Update timestamp (user is active)
     localStorage.setItem('encrypt_last_active', Date.now().toString());
   }
 }
 
-// Check immediately on load
+// Run the check when the page loads
 window.addEventListener('load', checkLastActive);
 
 // Update timestamp whenever user interacts
 ['click', 'mousemove', 'keypress', 'touchstart', 'scroll'].forEach(evt => {
   window.addEventListener(evt, () => {
     localStorage.setItem('encrypt_last_active', Date.now().toString());
-  });
+  }, { passive: true });
 });
 
 

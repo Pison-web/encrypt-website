@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>About — Encryps</title>
+  <title>About — Encrypts</title>
   <meta name="description" content="About Encrypts — private inbox for anonymous messages" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -174,15 +174,19 @@ body.light-theme .footer-link:hover {
       </section>
     </main>
 
-    <footer class="site-footer">
-  <p>
-    This website was built by 
-    <a href="https://www.instagram.com/big_p_lawwd/" target="_blank" class="footer-link"><strong>Lawwd BIG P</strong></a></p>
-  <p class="muted">A proud student of <strong>The University of Arizona</strong></p>
-  <p class="muted" style="margin-top:10px; font-size:14px;">
-    © <span id="year"></span> <strong>Encrypts</strong>. All rights reserved.
-  </p>
-   </footer>
+  <div id="footer"></div>
+
+<script>
+  fetch("footer.html")
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById("footer").innerHTML = html;
+
+      // Now that the HTML is inserted, update the year
+      document.getElementById("year").textContent = new Date().getFullYear();
+    });
+</script>
+
 </div>
 <script>
   // Auto-update copyright year
