@@ -290,67 +290,89 @@ $('#toggleTheme')?.addEventListener('click', ()=>{
 
 /* Routing */
 async function route(){
+  // ensure auth has initialised (authReady resolves when onAuthStateChanged first runs)
+  await authReady;
+
+  // protect certain views so logged-out users can't open them
   const hash = location.hash.slice(1);
   const [_, view, id] = hash.split('/');
+
+  // views that should only be accessible to signed-in users
+  const protectedViews = [
+    "my-inboxes",
+    "inbox",
+    "profile",
+    "my-inboxes",
+    // "home" // <- optional: keep home public if you like
+  ];
+
+  // If user is NOT logged in and is trying to open a protected view, redirect to account
+  if (!auth.currentUser && protectedViews.includes(view)) {
+    // quick UX: show a toast and send user to login/register
+    toast("Please log in first.");
+    location.hash = "#/account";
+    return;
+  }
+
+  // hide all views then show only requested one
   $$('[data-view]').forEach(v=>v.classList.remove('active'));
 
   if (view === 'send' && id) {
-  $('#view-send').classList.add('active');
-  const profileId = id.split('-')[0];
+    $('#view-send').classList.add('active');
+    const profileId = id.split('-')[0];
 
-  // 🔹 Wait until Firebase Auth + Firestore are ready before fetching
-  await authReady;
-  let profile = null;
+    // Wait until Firebase Auth + Firestore are ready before fetching
+    let profile = null;
+    try {
+      profile = await DB.getProfile(profileId);
+    } catch (err) {
+      console.warn('Could not load profile:', err);
+    }
 
-  try {
-    profile = await DB.getProfile(profileId);
-  } catch (err) {
-    console.warn('Could not load profile:', err);
+    if (profile?.name) {
+      $('#sendToName').textContent = profile.name;
+    } else {
+      $('#sendToName').textContent = 'Encrypt user';
+    }
+
+    $('#sendLink').value = location.href;
+    return;
   }
-
-  if (profile?.name) {
-    $('#sendToName').textContent = profile.name;
-  } else {
-    $('#sendToName').textContent = 'Encrypt user';
-  }
-
-  $('#sendLink').value = location.href;
-  return;
-}
 
   if(view === 'inbox' && id){
+    // inbox view is protected by the check above (only accessible when signed-in)
     $('#view-inbox').classList.add('active');
     await renderInbox(id);
     return;
   }
-  
-    if(view === 'my-inboxes'){
+
+  if(view === 'my-inboxes'){
     $('#view-my-inboxes').classList.add('active');
     await renderMyInboxes();
     return;
   }
 
-    if(view === 'account'){
+  if(view === 'account'){
     $('#view-account').classList.add('active');
-    initAccountPage(); // 💡 new helper we’ll define next
+    initAccountPage();
     return;
   }
 
   if (view === 'profile') {
-  $('#view-profile').classList.add('active');
-  await renderProfilePage();
-  return;
-}
+    $('#view-profile').classList.add('active');
+    await renderProfilePage();
+    return;
+  }
 
-
-  // default -> home
+  // default -> home (public)
   $('#view-home').classList.add('active');
+
+  // update KPIs (only works if user is signed in)
   const kpi = $('#kpiMessages');
   if(kpi) kpi.textContent = String(await DB.countAll());
 
   const kpiInboxes = $('#kpiInboxes'); 
   if (kpiInboxes) kpiInboxes.textContent = String(await DB.countInboxes());
-
 }
 window.addEventListener('hashchange', route);
 
