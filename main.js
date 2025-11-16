@@ -365,6 +365,7 @@ async function route(){
   }
 
     if(view === 'account'){
+      if (!enforceRouteProtection()) return;
     $('#view-account').classList.add('active');
     initAccountPage(); // 💡 new helper we’ll define next
     return;
