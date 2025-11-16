@@ -111,6 +111,11 @@ window.addEventListener('load', checkLastActive);
     localStorage.setItem('encrypt_last_active', Date.now().toString());
   });
 });
+// 🔥 NEW: background inactivity checker (runs every 60 seconds)
+setInterval(() => {
+  checkLastActive();
+}, 60 * 1000); // every 1 minute
+
 
 
 // Track auth state and resolve initial promise once
@@ -286,6 +291,35 @@ $('#toggleTheme')?.addEventListener('click', ()=>{
 });
 
 /* Routing */
+
+// =============================================
+//  PROTECTED ROUTE HANDLER
+//  Blocks private pages when user is logged out
+// =============================================
+function enforceRouteProtection() {
+  const hash = location.hash.slice(1);   // remove "#/"
+  const parts = hash.split("/");
+
+  const mainView = parts[0]; // first section of URL
+
+  // All protected views that require login
+  const protectedViews = [
+    "home",
+    "my-inboxes",
+    "inbox",
+    "profile"
+  ];
+
+  // If user is NOT logged in and is trying to access a protected view
+  if (!auth.currentUser && protectedViews.includes(mainView)) {
+    toast("Please log in to continue.");
+    location.hash = "#/account";
+    return false; // Block route from loading
+  }
+
+  return true; // Route allowed
+}
+
 async function route(){
   const hash = location.hash.slice(1);
   const [_, view, id] = hash.split('/');
@@ -297,6 +331,7 @@ async function route(){
 
   // 🔹 Wait until Firebase Auth + Firestore are ready before fetching
   await authReady;
+  if (!enforceRouteProtection()) return;
   let profile = null;
 
   try {
@@ -316,12 +351,14 @@ async function route(){
 }
 
   if(view === 'inbox' && id){
+    if (!enforceRouteProtection()) return;
     $('#view-inbox').classList.add('active');
     await renderInbox(id);
     return;
   }
   
     if(view === 'my-inboxes'){
+      if (!enforceRouteProtection()) return;
     $('#view-my-inboxes').classList.add('active');
     await renderMyInboxes();
     return;
@@ -334,6 +371,7 @@ async function route(){
   }
 
   if (view === 'profile') {
+    if (!enforceRouteProtection()) return;
   $('#view-profile').classList.add('active');
   await renderProfilePage();
   return;
