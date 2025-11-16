@@ -69,50 +69,47 @@ function getInitials(fullName = "") {
 }
 
 /* ----------------------------
-   Auto logout after 6 hours of inactivity
+   Auth persistence + initial auth ready promise
+   ---------------------------- */
+let currentUser = null;
+let _resolveAuthReady = null;
+const authReady = new Promise(res => { _resolveAuthReady = res; });
+
+// Try to set persistence (so anon UID survives reloads)
+(async ()=>{
+  try { await setPersistence(auth, browserLocalPersistence); }
+  catch(e){ console.warn('setPersistence failed (non-fatal):', e); }
+})();
+/* ----------------------------
+   Auto logout after 12 hours of inactivity
    ---------------------------- */
 const LOGOUT_TIMEOUT = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
 
-// Make this async so we can await signOut()
-async function checkLastActive() {
+function checkLastActive() {
   const lastActive = localStorage.getItem('encrypt_last_active');
-  if (lastActive && Date.now() - Number(lastActive) > LOGOUT_TIMEOUT) {
+  if (lastActive && Date.now() - parseInt(lastActive) > LOGOUT_TIMEOUT) {
     // Too long since last visit -> auto logout
     if (auth.currentUser) {
-      try {
-        await signOut(auth);
-      } catch (err) {
-        console.warn('signOut failed during inactivity check:', err);
-        // continue to clear local state even if signOut failed
-      }
-
-      // Clean up and force a reload so the session is fully reset
-      localStorage.removeItem('encrypt_last_active');
-      toast("Session expired — you’ve been logged out.");
-
-      // Small delay so the toast can appear briefly, then force reload
-      setTimeout(() => {
-        // navigate to account view and reload to ensure auth state is cleared
-        location.hash = "#/account";
-        window.location.reload();
-      }, 300);
-
-      return;
+      signOut(auth).then(() => {
+        localStorage.removeItem('encrypt_last_active');
+        toast("Session expired — you’ve been logged out.");
+        location.hash = "#/account"; // redirect to login
+      });
     }
   } else {
-    // Update timestamp (user is active)
+    // Update timestamp
     localStorage.setItem('encrypt_last_active', Date.now().toString());
   }
 }
 
-// Run the check when the page loads
+// Check immediately on load
 window.addEventListener('load', checkLastActive);
 
 // Update timestamp whenever user interacts
 ['click', 'mousemove', 'keypress', 'touchstart', 'scroll'].forEach(evt => {
   window.addEventListener(evt, () => {
     localStorage.setItem('encrypt_last_active', Date.now().toString());
-  }, { passive: true });
+  });
 });
 
 
@@ -290,89 +287,67 @@ $('#toggleTheme')?.addEventListener('click', ()=>{
 
 /* Routing */
 async function route(){
-  // ensure auth has initialised (authReady resolves when onAuthStateChanged first runs)
-  await authReady;
-
-  // protect certain views so logged-out users can't open them
   const hash = location.hash.slice(1);
   const [_, view, id] = hash.split('/');
-
-  // views that should only be accessible to signed-in users
-  const protectedViews = [
-    "my-inboxes",
-    "inbox",
-    "profile",
-    "my-inboxes",
-    // "home" // <- optional: keep home public if you like
-  ];
-
-  // If user is NOT logged in and is trying to open a protected view, redirect to account
-  if (!auth.currentUser && protectedViews.includes(view)) {
-    // quick UX: show a toast and send user to login/register
-    toast("Please log in first.");
-    location.hash = "#/account";
-    return;
-  }
-
-  // hide all views then show only requested one
   $$('[data-view]').forEach(v=>v.classList.remove('active'));
 
   if (view === 'send' && id) {
-    $('#view-send').classList.add('active');
-    const profileId = id.split('-')[0];
+  $('#view-send').classList.add('active');
+  const profileId = id.split('-')[0];
 
-    // Wait until Firebase Auth + Firestore are ready before fetching
-    let profile = null;
-    try {
-      profile = await DB.getProfile(profileId);
-    } catch (err) {
-      console.warn('Could not load profile:', err);
-    }
+  // 🔹 Wait until Firebase Auth + Firestore are ready before fetching
+  await authReady;
+  let profile = null;
 
-    if (profile?.name) {
-      $('#sendToName').textContent = profile.name;
-    } else {
-      $('#sendToName').textContent = 'Encrypt user';
-    }
-
-    $('#sendLink').value = location.href;
-    return;
+  try {
+    profile = await DB.getProfile(profileId);
+  } catch (err) {
+    console.warn('Could not load profile:', err);
   }
 
+  if (profile?.name) {
+    $('#sendToName').textContent = profile.name;
+  } else {
+    $('#sendToName').textContent = 'Encrypt user';
+  }
+
+  $('#sendLink').value = location.href;
+  return;
+}
+
   if(view === 'inbox' && id){
-    // inbox view is protected by the check above (only accessible when signed-in)
     $('#view-inbox').classList.add('active');
     await renderInbox(id);
     return;
   }
-
-  if(view === 'my-inboxes'){
+  
+    if(view === 'my-inboxes'){
     $('#view-my-inboxes').classList.add('active');
     await renderMyInboxes();
     return;
   }
 
-  if(view === 'account'){
+    if(view === 'account'){
     $('#view-account').classList.add('active');
-    initAccountPage();
+    initAccountPage(); // 💡 new helper we’ll define next
     return;
   }
 
   if (view === 'profile') {
-    $('#view-profile').classList.add('active');
-    await renderProfilePage();
-    return;
-  }
+  $('#view-profile').classList.add('active');
+  await renderProfilePage();
+  return;
+}
 
-  // default -> home (public)
+
+  // default -> home
   $('#view-home').classList.add('active');
-
-  // update KPIs (only works if user is signed in)
   const kpi = $('#kpiMessages');
   if(kpi) kpi.textContent = String(await DB.countAll());
 
   const kpiInboxes = $('#kpiInboxes'); 
   if (kpiInboxes) kpiInboxes.textContent = String(await DB.countInboxes());
+
 }
 window.addEventListener('hashchange', route);
 
