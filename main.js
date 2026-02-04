@@ -786,10 +786,10 @@ document.addEventListener('click', () => {
   document.querySelectorAll('.menu-item.delete').forEach((btn) => {
     btn.addEventListener('click', async (e) => {
       const id = e.target.dataset.id;
-      if (!confirm('Delete this inbox permanently?')) return;
+      if (!confirm('Delete this inbox permanently? You will not be able to access it after deletion')) return;
       try {
         await deleteDoc(doc(db, 'profiles', id));
-        toast('Inbox deleted 🗑️');
+        toast('Inbox deleted ❗'); 
         await renderMyInboxes(); // refresh list
       } catch (err) {
         console.error(err);
